@@ -1,0 +1,35 @@
+.breadcrumb-wrapper {
+  .breadcrumb {
+    background-color: transparent;
+    padding: 0;
+    margin-bottom: 0;
+    font-size: 0.9rem;
+
+    .breadcrumb-item {
+      display: flex;
+      align-items: center;
+      color: #6c757d; // 預設灰
+
+      a {
+        text-decoration: none;
+        color: #333; // 暗色
+        transition: color 0.3s ease;
+
+        &:hover {
+          color: #a37b51; // 品牌色
+        }
+      }
+
+      &.active {
+        color: #a37b51; // 目前所在位置
+        font-weight: 500;
+      }
+
+      + .breadcrumb-item::before {
+        content: "/"; // 指定分隔符號或是 icon
+        padding: 0 10px;
+        color: #ccc;
+      }
+    }
+  }
+}

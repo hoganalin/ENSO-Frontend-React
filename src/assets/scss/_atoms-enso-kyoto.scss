@@ -1,0 +1,270 @@
+/* ============================================
+   ENSO 京都 — Utility classes & visual atoms
+   ============================================ */
+
+/* Type styles */
+.t-brand {
+  font-family: var(--font-latin-display);
+  letter-spacing: 0.35em;
+  font-weight: 500;
+}
+.t-jp-title {
+  font-family: var(--font-serif-jp);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+.t-brush {
+  font-family: var(--font-brush);
+  font-weight: 600;
+  opacity: calc(var(--brush-intensity, 1) * 1);
+}
+.t-eyebrow {
+  font-family: var(--font-latin-display);
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--enso-gold);
+  font-weight: 400;
+}
+.t-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 0.3em;
+}
+
+/* Section paddings */
+.section-x { padding-left: 48px; padding-right: 48px; }
+.section-y { padding-top: 140px; padding-bottom: 140px; }
+@media (max-width: 768px) {
+  .section-x { padding-left: 24px; padding-right: 24px; }
+  .section-y { padding-top: 80px; padding-bottom: 80px; }
+}
+.max-inner { max-width: 1320px; margin: 0 auto; }
+
+/* Hairlines */
+.hairline { height: 1px; background: var(--line-strong); }
+.hairline-vert { width: 1px; background: var(--line-strong); }
+.no-select { user-select: none; }
+
+/* Kanji divider */
+.kanji-divider {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  color: var(--fg-muted);
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--line-strong), transparent);
+  }
+}
+
+/* Vermillion seal — 朱印 */
+.seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif-jp);
+  font-weight: 700;
+  color: #fff;
+  background: var(--vermillion);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.2),
+    inset 0 0 12px rgba(122, 42, 31, 0.6);
+  border-radius: 3px;
+  letter-spacing: 0.1em;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  padding: 8px 6px;
+  font-size: 12px;
+  line-height: 1.3;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><filter id='s'><feTurbulence baseFrequency='0.9' numOctaves='2' seed='3'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.3 0'/></filter><rect width='60' height='60' filter='url(%23s)'/></svg>");
+    mix-blend-mode: screen;
+    opacity: 0.5;
+    border-radius: 3px;
+    pointer-events: none;
+  }
+}
+
+/* Seigaiha (青海波) wave pattern — usable as a background utility */
+.seigaiha-bg {
+  background-color: var(--enso-ink);
+  background-image:
+    radial-gradient(circle at 20px 35px, transparent 20px, rgba(201, 160, 99, 0.1) 20px, rgba(201, 160, 99, 0.1) 21px, transparent 22px),
+    radial-gradient(circle at 20px 35px, transparent 15px, rgba(201, 160, 99, 0.08) 15px, rgba(201, 160, 99, 0.08) 16px, transparent 17px),
+    radial-gradient(circle at 20px 35px, transparent 10px, rgba(201, 160, 99, 0.06) 10px, rgba(201, 160, 99, 0.06) 11px, transparent 12px),
+    radial-gradient(circle at 20px 35px, transparent 5px, rgba(201, 160, 99, 0.04) 5px, rgba(201, 160, 99, 0.04) 6px, transparent 7px);
+  background-size: 40px 40px;
+}
+
+/* Asanoha (麻葉) hemp-leaf pattern overlay */
+.asanoha-overlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(60deg, transparent 49.5%, rgba(201, 160, 99, 0.08) 49.5%, rgba(201, 160, 99, 0.08) 50.5%, transparent 50.5%),
+    linear-gradient(-60deg, transparent 49.5%, rgba(201, 160, 99, 0.08) 49.5%, rgba(201, 160, 99, 0.08) 50.5%, transparent 50.5%),
+    linear-gradient(90deg, transparent 49.5%, rgba(201, 160, 99, 0.08) 49.5%, rgba(201, 160, 99, 0.08) 50.5%, transparent 50.5%);
+  background-size: 40px 70px;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+/* Washi-paper background */
+.washi-bg {
+  position: relative;
+  background: var(--washi);
+  background-image:
+    radial-gradient(ellipse at 30% 20%, rgba(168, 134, 77, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 70%, rgba(122, 100, 70, 0.05) 0%, transparent 60%);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='paper'><feTurbulence baseFrequency='0.55' numOctaves='3' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.42  0 0 0 0 0.3  0 0 0 0.15 0'/></filter><rect width='300' height='300' filter='url(%23paper)' opacity='0.7'/></svg>");
+    mix-blend-mode: multiply;
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  > * { position: relative; z-index: 1; }
+}
+
+/* Image placeholder with diagonal stripes */
+.img-placeholder {
+  background:
+    repeating-linear-gradient(45deg, rgba(201, 160, 99, 0.08) 0 2px, transparent 2px 12px),
+    var(--enso-ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg-dim);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+
+/* Buttons */
+.btn-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 32px;
+  font-family: var(--font-serif-jp);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  color: var(--enso-ink);
+  background: var(--enso-gold);
+  border: 1px solid var(--enso-gold);
+  cursor: pointer;
+  transition: all 0.35s var(--ease-enso);
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    background: var(--enso-gold-deep);
+    border-color: var(--enso-gold-deep);
+    transform: translateY(-1px);
+  }
+}
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 32px;
+  font-family: var(--font-serif-jp);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  color: var(--enso-fg);
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  cursor: pointer;
+  transition: all 0.35s;
+
+  &:hover {
+    border-color: var(--enso-gold);
+    color: var(--enso-gold);
+  }
+
+  &.on-washi {
+    color: var(--enso-ink);
+    border-color: var(--enso-ink);
+
+    &:hover {
+      background: var(--enso-ink);
+      color: var(--washi);
+    }
+  }
+}
+
+/* Form input */
+.input-field-enso {
+  width: 100%;
+  padding: 14px 16px;
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  color: var(--enso-fg);
+  font-family: var(--font-serif-tc);
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  transition: border-color 0.3s;
+
+  &:focus {
+    outline: none;
+    border-color: var(--enso-gold);
+  }
+
+  &::placeholder { color: var(--fg-dim); }
+}
+
+/* Animations */
+@keyframes ensoFadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes ensoFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes ensoSmokeDrift {
+  0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0; }
+  15% { opacity: 0.8; }
+  100% { transform: translate3d(var(--dx, 40px), -300px, 0) scale(2.4); opacity: 0; }
+}
+@keyframes ensoMistPan {
+  0%, 100% { transform: translate3d(-5%, 0, 0); }
+  50% { transform: translate3d(5%, -2%, 0); }
+}
+@keyframes ensoEmberGlow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+@keyframes ensoFloatSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes ensoDrawStroke {
+  from { stroke-dashoffset: var(--dash-len, 400); }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes ensoRipple {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.fade-up-enso { animation: ensoFadeUp 1.2s var(--ease-enso) both; }
+.fade-in-enso { animation: ensoFadeIn 1.5s ease both; }

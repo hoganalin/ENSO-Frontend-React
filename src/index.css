@@ -1,0 +1,20 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: "Noto Sans TC", "Segoe UI", sans-serif;
+  color: #212529;
+  background-color: #fff;
+}
+
+a {
+  text-decoration: none;
+}
+
+#root {
+  min-height: 100vh;
+}

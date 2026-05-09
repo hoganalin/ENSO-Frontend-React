@@ -1,0 +1,430 @@
+/* ============================================
+   ENSO 京都 — Site Header
+   ============================================ */
+.enso-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(13, 15, 14, 0.92);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(201, 160, 99, 0.12);
+
+  &__inner {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    padding: 14px 40px;
+    max-width: 1440px;
+    margin: 0 auto;
+
+    @media (max-width: 991px) {
+      gap: 8px;
+      padding: 12px 16px;
+    }
+
+    @media (max-width: 480px) {
+      gap: 4px;
+      padding: 10px 12px;
+    }
+  }
+
+  &__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--enso-fg);
+    padding-right: 16px;
+    margin-right: 8px;
+    min-width: 0;
+
+    @media (max-width: 991px) {
+      gap: 8px;
+      padding-right: 0;
+      margin-right: 0;
+    }
+
+    &-circle {
+      width: 38px;
+      height: 38px;
+      color: var(--enso-fg);
+      flex-shrink: 0;
+
+      @media (max-width: 480px) {
+        width: 30px;
+        height: 30px;
+      }
+    }
+
+    &-text {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+      line-height: 1;
+    }
+
+    &-mark {
+      font-family: var(--font-latin-display);
+      font-size: 22px;
+      font-weight: 400;
+      letter-spacing: 0.32em;
+      color: var(--enso-fg);
+      line-height: 1;
+
+      @media (max-width: 480px) {
+        font-size: 17px;
+        letter-spacing: 0.2em;
+      }
+    }
+
+    &-sub {
+      font-family: var(--font-serif-jp);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--enso-gold);
+      line-height: 1;
+
+      @media (max-width: 480px) {
+        font-size: 9px;
+        letter-spacing: 0.12em;
+      }
+    }
+  }
+
+  &__nav {
+    display: none;
+    align-items: center;
+    gap: 36px;
+    margin-left: 32px;
+
+    @media (min-width: 992px) {
+      display: flex;
+    }
+  }
+
+  &__nav-link {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-family: var(--font-serif-jp);
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    color: var(--enso-fg);
+    text-decoration: none;
+    padding: 6px 0;
+    cursor: pointer;
+    transition: color 0.3s;
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 0;
+      height: 1px;
+      background: var(--enso-gold);
+      transition: width 0.4s var(--ease-enso);
+    }
+
+    &:hover,
+    &.is-active {
+      color: var(--enso-gold);
+
+      &::after { width: 100%; }
+    }
+  }
+
+  &__nav-label { line-height: 1; }
+  &__nav-sub {
+    font-family: var(--font-serif-jp);
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    color: var(--enso-gold);
+    opacity: 0.75;
+    line-height: 1;
+  }
+
+  &__search-pop {
+    position: relative;
+    summary {
+      list-style: none;
+      cursor: pointer;
+      color: var(--enso-fg);
+      padding: 6px 4px;
+      font-size: 14px;
+      transition: color 0.3s;
+      &::-webkit-details-marker { display: none; }
+      &:hover { color: var(--enso-gold); }
+    }
+    &[open] form {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      display: flex;
+      align-items: center;
+      width: 240px;
+      padding: 8px 12px;
+      background: rgba(13, 15, 14, 0.95);
+      border: 1px solid var(--line);
+      input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--enso-fg);
+        font-family: var(--font-serif-tc);
+        font-size: 13px;
+        &::placeholder { color: var(--fg-dim); }
+      }
+      button {
+        background: transparent;
+        border: none;
+        color: var(--fg-muted);
+        cursor: pointer;
+        padding: 0 4px;
+        &:hover { color: var(--enso-gold); }
+      }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-left: auto;
+    flex-shrink: 0;
+
+    @media (max-width: 991px) {
+      gap: 6px;
+    }
+
+    @media (max-width: 480px) {
+      gap: 2px;
+    }
+  }
+
+  &__icon-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 4px;
+
+    @media (max-width: 480px) {
+      padding: 6px 2px;
+      font-size: 12px;
+    }
+    background: transparent;
+    border: none;
+    color: var(--enso-fg);
+    font-family: var(--font-serif-jp);
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.3s;
+
+    &:hover { color: var(--enso-gold); }
+
+    .label { display: none; @media (min-width: 768px) { display: inline; } }
+  }
+
+  &__cart-badge {
+    position: absolute;
+    top: -6px;
+    right: -10px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: var(--enso-gold);
+    color: var(--enso-ink);
+    font-family: var(--font-latin-display);
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__search {
+    display: none;
+    @media (min-width: 992px) {
+      display: flex;
+      align-items: center;
+      width: 220px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--enso-fg);
+      font-family: var(--font-serif-tc);
+      font-size: 13px;
+
+      &::placeholder { color: var(--fg-dim); }
+    }
+
+    button {
+      background: transparent;
+      border: none;
+      color: var(--fg-muted);
+      cursor: pointer;
+      padding: 0 4px;
+
+      &:hover { color: var(--enso-gold); }
+    }
+  }
+
+  &__menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--enso-fg);
+    cursor: pointer;
+
+    @media (min-width: 992px) { display: none; }
+  }
+
+  &__mobile {
+    display: none;
+    border-top: 1px solid var(--line);
+    padding: 16px 24px;
+
+    &.is-open {
+      display: block;
+      @media (min-width: 992px) { display: none; }
+    }
+
+    .enso-header__nav {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-left: 0;
+    }
+  }
+}
+
+/* Loading veil reused by Header navigation */
+.enso-nav-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  color: var(--washi);
+  font-family: var(--font-serif-jp);
+  letter-spacing: 0.2em;
+}
+
+/* Header / Hero */
+.hero-header {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  padding-block: clamp(32px, 8vh, 120px);
+
+  &__bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  &__swiper {
+    width: 100%;
+    height: 100%;
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.hero-header__overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(36, 53, 47, 0.45);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.hero-header__inner {
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-header__content {
+  max-width: 520px;
+  margin: auto;
+
+  &_title {
+    font-size: clamp(40px, 6vw, 64px);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+}
+
+/* Header logo */
+.header-logo-wrapper {
+  display: flex;
+  align-items: center;
+  gap: $custom-spacing-logo-gap;
+}
+
+.header-logo-image {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+
+.header-logo-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.header-logo {
+  font-family: $headings-font-family;
+  font-size: $h2-font-size;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.03em;
+}
+
+.header-sublogo {
+  font-size: $custom-font-size-title-sub;
+  letter-spacing: 0.32em;
+  color: $custom-color-sublogo;
+  margin-top: $custom-spacing-sublogo-top;
+}

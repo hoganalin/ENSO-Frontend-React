@@ -1,0 +1,65 @@
+/* ============================================
+   ENSO 京都 — Direction & Accent variants
+   Switched via <html data-direction="..."> + <html data-accent="...">
+   ============================================ */
+
+/* Direction — affects background tint & ambience */
+html[data-direction='sakura'] {
+  --direction-tint: #e8b4c4;
+  --direction-bg-accent: rgba(232, 180, 196, 0.04);
+
+  body {
+    background: linear-gradient(180deg, var(--enso-ink) 0%, #1a1517 100%);
+  }
+}
+
+html[data-direction='seigaiha'] {
+  --direction-tint: #c9a063;
+  --direction-bg-accent: rgba(201, 160, 99, 0.03);
+
+  body {
+    background: #0a0b0a;
+  }
+}
+
+html[data-direction='kiku'] {
+  --direction-tint: #c65a3e;
+  --direction-bg-accent: rgba(198, 90, 62, 0.05);
+
+  body {
+    background: linear-gradient(180deg, #141211 0%, #1f1412 100%);
+  }
+}
+
+/* Accent hue */
+html[data-accent='gold'] {
+  --enso-gold: #c9a063;
+  --enso-gold-deep: #a8864d;
+  --enso-gold-soft: #d9b680;
+  --enso-accent: #c9a063;
+  --line: rgba(201, 160, 99, 0.18);
+  --line-strong: rgba(201, 160, 99, 0.4);
+}
+
+html[data-accent='vermillion'] {
+  --enso-gold: #d0543b;
+  --enso-gold-deep: #a43d26;
+  --enso-gold-soft: #e07259;
+  --enso-accent: #d0543b;
+  --line: rgba(208, 84, 59, 0.2);
+  --line-strong: rgba(208, 84, 59, 0.4);
+}
+
+html[data-accent='moss'] {
+  --enso-gold: #8ba07a;
+  --enso-gold-deep: #5f7353;
+  --enso-gold-soft: #a8bc97;
+  --enso-accent: #8ba07a;
+  --line: rgba(139, 160, 122, 0.2);
+  --line-strong: rgba(139, 160, 122, 0.4);
+}
+
+/* Toggles */
+html[data-no-paper] .paper-texture,
+html[data-no-paper] .washi-bg::before { display: none !important; }
+html[data-no-smoke] .smoke-layer { display: none !important; }

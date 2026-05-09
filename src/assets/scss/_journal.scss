@@ -1,0 +1,226 @@
+/* ============================================
+   ENSO 京都 — Journal (list + article)
+   ============================================ */
+.enso-journal {
+  background: var(--enso-ink);
+  color: var(--enso-fg);
+  padding: 96px 48px 120px;
+  @media (max-width: 768px) { padding: 72px 24px 96px; }
+
+  &__hero {
+    max-width: 720px;
+    margin: 0 auto 80px;
+    text-align: center;
+  }
+
+  &__title {
+    font-family: var(--font-serif-jp);
+    font-size: clamp(40px, 5.5vw, 72px);
+    font-weight: 500; letter-spacing: 0.08em;
+    margin: 16px 0 24px;
+    .accent { color: var(--enso-gold); }
+  }
+
+  &__sub {
+    font-family: var(--font-serif-tc);
+    font-size: 14px; line-height: 2;
+    color: var(--fg-muted);
+    margin: 0 0 56px;
+  }
+
+  &__grid {
+    max-width: 1320px; margin: 0 auto;
+    display: grid; grid-template-columns: 1fr; gap: 32px;
+    @media (min-width: 768px) { grid-template-columns: repeat(2, 1fr); }
+    @media (min-width: 1100px) { grid-template-columns: repeat(3, 1fr); }
+  }
+}
+
+.enso-journal-card {
+  position: relative;
+  display: flex; flex-direction: column;
+  padding: 36px 32px 40px;
+  background: var(--enso-ink-deep);
+  border: 1px solid var(--line);
+  text-decoration: none;
+  color: var(--enso-fg);
+  overflow: hidden;
+  transition: border-color 0.4s, transform 0.4s var(--ease-enso);
+  min-height: 360px;
+
+  &:hover { border-color: var(--enso-gold); transform: translateY(-4px); }
+
+  &__kanji {
+    position: absolute;
+    right: -30px; top: -10px;
+    font-family: var(--font-brush);
+    font-size: 220px;
+    line-height: 1;
+    color: rgba(201, 160, 99, 0.06);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  &__body { position: relative; z-index: 1; flex: 1; }
+
+  &__kicker {
+    font-family: var(--font-serif-jp);
+    font-size: 12px; letter-spacing: 0.3em;
+    color: var(--enso-gold);
+    margin-bottom: 16px;
+  }
+
+  &__title {
+    font-family: var(--font-serif-jp);
+    font-size: 22px; line-height: 1.5;
+    letter-spacing: 0.05em;
+    margin: 0 0 14px;
+  }
+
+  &__excerpt {
+    font-family: var(--font-serif-tc);
+    font-size: 13px; line-height: 1.9;
+    color: var(--fg-muted);
+    margin: 0 0 28px;
+  }
+
+  &__meta {
+    display: flex; gap: 8px; align-items: center;
+    font-family: var(--font-latin-display);
+    font-size: 11px; letter-spacing: 0.3em;
+    color: var(--fg-dim);
+  }
+
+  &__seal {
+    position: absolute !important;
+    right: 24px; bottom: 24px;
+    z-index: 2;
+  }
+}
+
+/* Article */
+.enso-journal-article {
+  background: var(--enso-ink);
+  color: var(--enso-fg);
+  padding: 64px 48px 120px;
+  max-width: 880px;
+  margin: 0 auto;
+
+  @media (max-width: 768px) { padding: 48px 24px 96px; }
+
+  &__back {
+    display: inline-block;
+    font-family: var(--font-serif-jp);
+    font-size: 13px; letter-spacing: 0.2em;
+    color: var(--fg-muted);
+    text-decoration: none;
+    margin-bottom: 56px;
+    transition: color 0.3s;
+    &:hover { color: var(--enso-gold); }
+  }
+
+  &__hero { text-align: center; }
+
+  &__title {
+    font-family: var(--font-serif-jp);
+    font-size: clamp(32px, 4.2vw, 56px);
+    font-weight: 500; letter-spacing: 0.06em;
+    line-height: 1.4;
+    margin: 16px 0 24px;
+  }
+
+  &__meta {
+    display: flex; gap: 10px; justify-content: center; align-items: center;
+    font-family: var(--font-latin-display);
+    font-size: 11px; letter-spacing: 0.3em;
+    color: var(--fg-dim);
+    flex-wrap: wrap;
+  }
+
+  &__cover {
+    position: relative;
+    aspect-ratio: 16/7;
+    margin: 64px 0;
+    background: var(--enso-ink-deep);
+    border: 1px solid var(--line);
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  &__cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &__cover-kanji {
+    font-family: var(--font-brush);
+    font-size: clamp(160px, 22vw, 320px);
+    color: var(--enso-gold);
+    opacity: 0.72;
+  }
+
+  &__body {
+    font-family: var(--font-serif-tc);
+    font-size: 16px; line-height: 2.1;
+    color: var(--enso-fg);
+
+    .lede {
+      font-size: 19px; font-style: italic;
+      color: var(--enso-gold);
+      margin-bottom: 32px;
+      font-family: var(--font-latin-serif);
+    }
+
+    h2 {
+      font-family: var(--font-serif-jp);
+      font-size: 24px; letter-spacing: 0.08em;
+      margin: 56px 0 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    p { margin: 0 0 22px; color: var(--enso-fg); }
+
+    blockquote {
+      margin: 48px 0;
+      padding: 32px 40px;
+      border-left: 3px solid var(--enso-gold);
+      background: var(--enso-ink-deep);
+      font-family: var(--font-serif-jp);
+      font-size: 22px;
+      line-height: 1.8;
+      letter-spacing: 0.06em;
+      color: var(--enso-gold);
+    }
+  }
+
+  &__end {
+    margin: 80px 0 0;
+    text-align: center;
+    display: flex; flex-direction: column; gap: 6px; align-items: center;
+    .kanji {
+      font-family: var(--font-brush);
+      font-size: 56px; color: var(--enso-gold);
+    }
+    .latin {
+      font-family: var(--font-latin-display);
+      font-size: 11px; letter-spacing: 0.4em; color: var(--fg-dim);
+    }
+  }
+
+  &__related { margin-top: 120px; }
+
+  &__related-title {
+    font-family: var(--font-serif-jp);
+    font-size: 28px; letter-spacing: 0.1em;
+    text-align: center;
+    margin: 0 0 48px;
+  }
+
+  &__related-grid {
+    display: grid; grid-template-columns: 1fr; gap: 24px;
+    @media (min-width: 768px) { grid-template-columns: repeat(3, 1fr); }
+  }
+}

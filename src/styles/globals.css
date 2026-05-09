@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/*
+ * ENSO brand design tokens — Tailwind v4 @theme
+ * These map to utility classes like:
+ *   bg-enso-primary, text-enso-gold, border-enso-cream, etc.
+ */
+@theme {
+  --color-enso-primary: #1a4636;
+  --color-enso-primary-dark: #0f2e22;
+  --color-enso-gold: #b08a4f;
+  --color-enso-gold-dark: #8f6e3c;
+  --color-enso-cream: #f8f6f1;
+  --color-enso-text: #2c2c2c;
+  --color-enso-text-secondary: #6b6b6b;
+  --color-enso-border: #e5e1d8;
+}
+
+/* RWD: 確保所有頁面內容區塊在手機/平板下不會貼到螢幕邊緣 */
+.max-w-\[1180px\].mx-auto {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+@media (min-width: 768px) {
+  .max-w-\[1180px\].mx-auto {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+@media (min-width: 1240px) {
+  .max-w-\[1180px\].mx-auto {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}

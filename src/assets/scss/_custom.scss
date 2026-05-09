@@ -1,0 +1,52 @@
+// Variables & Tokens
+@import "variables-custom";
+@import "tokens-enso-kyoto";
+@import "direction-accent";
+
+// Shared Utilities
+@import "shared";
+@import "atoms-enso-kyoto";
+
+// Layout Components
+@import "header";
+@import "navbar";
+@import "footer";
+
+@import "breadcrumb";
+
+@import "home";
+@import "product-card";
+@import "single-product";
+@import "about";
+@import "checkout";
+@import "login";
+@import "journal";
+@import "extras-enso";
+@import "shopping-agent";
+@import "playground";
+
+.single-product__qty-selector {
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  gap: 4px;
+
+  button {
+    flex: 0 0 auto;
+  }
+
+  input[type="number"] {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+    text-align: center;
+    -moz-appearance: textfield;
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+}

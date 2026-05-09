@@ -1,0 +1,32 @@
+/* Design tokens */
+$custom-color-footer-sub: rgba($white, 0.38);
+$custom-color-footer-heading: $enso-brand-gold;
+$custom-color-navbar-bg: #f6f4efd1;
+$custom-color-sublogo: #707070;
+$custom-color-nav-link: #333;
+$custom-color-white-70: rgba($white, 0.7);
+$custom-color-white-20: rgba($white, 0.2);
+$custom-color-shadow: rgba($black, 0.1);
+
+$custom-font-size-title-sub: 11px;
+$custom-font-size-nav-link-md: 0.9rem;
+
+$custom-spacing-footer-li: 10px;
+$custom-spacing-logo-gap: 18px;
+$custom-spacing-sublogo-top: 4px;
+$custom-spacing-nav-pill-px: 20px;
+$custom-spacing-nav-pill-py: 12px;
+$custom-spacing-nav-link-px: 18px;
+$custom-spacing-nav-link-y: 8px;
+$custom-spacing-nav-link-md-x: 0.75rem;
+
+$custom-radius-nav: $border-radius-xl;
+$custom-radius-nav-link: 12px;
+
+$custom-shadow-nav: 0 8px 32px $custom-color-shadow;
+$custom-transition-nav: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+/* Section Standard */
+$custom-section-padding: 100px 0;
+$custom-bg-light: $gray-200;
+$custom-bg-white: $white;

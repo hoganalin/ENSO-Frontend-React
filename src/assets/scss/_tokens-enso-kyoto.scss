@@ -1,0 +1,44 @@
+/* ============================================
+   ENSO 京都 — Design Tokens (CSS custom properties)
+   Source: design_handoff_enso_kyoto/styles.css
+   ============================================ */
+
+:root {
+  /* Core brand colors */
+  --enso-ink: #1a1d1b;          /* 墨黑 */
+  --enso-ink-deep: #0d0f0e;     /* 更深的墨 */
+  --enso-ink-soft: #2a2e2b;     /* 柔墨 */
+  --enso-gold: #c9a063;         /* 金 */
+  --enso-gold-deep: #a8864d;    /* 深金 */
+  --enso-gold-soft: #d9b680;    /* 柔金 */
+  --enso-brown: #8a7a64;        /* 褐 */
+  --enso-primary: #24352f;      /* 深墨綠 */
+
+  /* Paper / neutrals */
+  --washi: #f5eee0;             /* 和紙米白 */
+  --washi-warm: #ede2cc;        /* 暖和紙 */
+  --washi-shadow: #d9cdb2;      /* 和紙陰影 */
+  --vermillion: #a83a2c;        /* 朱印紅 */
+  --vermillion-deep: #7a2a1f;
+
+  /* Semantic */
+  --enso-bg: var(--enso-ink);
+  --enso-bg-elevated: var(--enso-ink-soft);
+  --enso-fg: var(--washi);
+  --fg-muted: rgba(245, 238, 224, 0.6);
+  --fg-dim: rgba(245, 238, 224, 0.4);
+  --enso-accent: var(--enso-gold);
+  --line: rgba(201, 160, 99, 0.18);
+  --line-strong: rgba(201, 160, 99, 0.4);
+
+  /* Type stacks (fonts loaded via <link> in app/layout.tsx) */
+  --font-serif-jp: 'Shippori Mincho', 'Noto Serif TC', serif;
+  --font-serif-tc: 'Noto Serif TC', 'Shippori Mincho', serif;
+  --font-brush: 'Klee One', 'Shippori Mincho', cursive;
+  --font-latin-serif: 'Cormorant Garamond', serif;
+  --font-latin-display: 'Cinzel', serif;
+
+  /* Motion */
+  --ease-enso: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-aos: cubic-bezier(0.22, 0.68, 0.3, 1);
+}

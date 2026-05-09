@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "code-style": {
+      "source": "Significant-Gravitas/AutoGPT",
+      "sourceType": "github",
+      "computedHash": "7c74e7b890d5e8167fe8792c0241faeac539c83a7e0fb6500e5a174c4676a040"
+    },
+    "frontend-check": {
+      "source": "Significant-Gravitas/AutoGPT",
+      "sourceType": "github",
+      "computedHash": "d173034a1875e7f43a11b38c87db59f7f449d3ac32692bf338688d8998cbd74c"
+    }
+  }
+}

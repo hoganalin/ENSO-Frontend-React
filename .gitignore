@@ -1,0 +1,59 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Environment (keep .env.example tracked, everything else out)
+.env
+.env.*
+!.env.example
+
+# Next.js / Vercel / TS build outputs
+.next/
+out/
+build/
+*.tsbuildinfo
+tmp/
+
+# Vercel
+.vercel
+
+# IDE / Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Windows NTFS alternate data streams (從外網下載的檔案殘留)
+*:Zone.Identifier
+
+# Claude / AI tooling local overrides
+.claude/settings.local.json
+
+# Test / Coverage
+coverage/
+.nyc_output/
+
+# Optional cache directories
+.npm
+.eslintcache
+.turbo
+
+# Agent event store: production 已搬到 Upstash Redis (src/app/api/events/route.ts)
+# 本機 dev 沒設 KV_REST_API_URL 時會 fallback 到此檔，但不該被 commit
+# （以前 commit 進去會被 build 進 lambda image，造成 production 讀到舊死資料）
+/data/agent-events.json

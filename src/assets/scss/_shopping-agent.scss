@@ -1,0 +1,466 @@
+/* ============================================
+   ENSO 京都 — Shopping Agent (floating concierge)
+   ============================================ */
+
+/* Agent accent color tokens */
+.sa-agent-xiaohe { --sa-color: #c9a063; --sa-color-soft: rgba(201, 160, 99, 0.15); }
+.sa-agent-xiaoxiang { --sa-color: #d97757; --sa-color-soft: rgba(217, 119, 87, 0.15); }
+.sa-agent-xiaoguan { --sa-color: #8ba07a; --sa-color-soft: rgba(139, 160, 122, 0.15); }
+
+/* ===== Floating Action Button ===== */
+.sa-fab {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--enso-ink-deep);
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  z-index: 80;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.4s var(--ease-enso), border-color 0.3s;
+
+  &:hover {
+    transform: scale(1.05);
+    border-color: var(--enso-gold);
+  }
+
+  &-enso {
+    display: inline-flex;
+    pointer-events: none;
+  }
+
+  &-dot {
+    position: absolute;
+    top: 12px; right: 12px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--enso-gold);
+    box-shadow: 0 0 10px var(--enso-gold);
+    animation: ensoEmberGlow 2.4s ease-in-out infinite;
+  }
+
+  &-tip {
+    position: absolute;
+    right: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--enso-ink-deep);
+    color: var(--enso-fg);
+    border: 1px solid var(--line);
+    padding: 6px 14px;
+    font-family: var(--font-serif-jp);
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  &:hover .sa-fab-tip { opacity: 1; }
+}
+
+/* ===== Panel ===== */
+.sa-panel {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  width: 380px;
+  height: 580px;
+  max-height: calc(100vh - 56px);
+  background: var(--enso-ink-deep);
+  border: 1px solid var(--line);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-serif-tc);
+  color: var(--enso-fg);
+  overflow: hidden;
+  animation: ensoFadeUp 0.4s var(--ease-enso) both;
+
+  @media (max-width: 480px) {
+    inset: 0;
+    width: auto;
+    height: auto;
+    max-height: none;
+  }
+}
+
+.sa-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  background: var(--enso-ink);
+  border-bottom: 1px solid var(--line);
+
+  .sa-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+}
+
+.sa-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--sa-color, var(--enso-gold));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif-jp);
+  font-size: 18px;
+  color: var(--sa-color, var(--enso-gold));
+  background: rgba(13, 15, 14, 0.6);
+}
+
+.sa-agent-name {
+  font-family: var(--font-serif-jp);
+  font-size: 14px;
+  letter-spacing: 0.15em;
+  color: var(--enso-fg);
+}
+
+.sa-agent-role {
+  margin-left: 4px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--fg-muted);
+}
+
+.sa-adapter-label {
+  font-family: var(--font-latin-display);
+  font-size: 9px;
+  letter-spacing: 0.4em;
+  color: var(--fg-dim);
+  text-transform: uppercase;
+  margin-top: 2px;
+
+  &::before { content: 'ENSO · KYOTO · CONCIERGE · '; color: var(--fg-dim); opacity: 0.6; }
+}
+
+.sa-header-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--fg-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.3s, border-color 0.3s;
+
+  &:hover { color: var(--enso-gold); border-color: var(--line); }
+
+  i { font-size: 14px; }
+}
+
+.sa-memory-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--enso-gold);
+  color: var(--enso-ink);
+  font-family: var(--font-latin-display);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== Agent tabs ===== */
+.sa-agent-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.sa-agent-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 0;
+  background: var(--enso-ink-deep);
+  font-family: var(--font-serif-jp);
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  color: var(--fg-muted);
+  cursor: default;
+  transition: color 0.3s, background 0.3s;
+  border: none;
+
+  > span:first-child {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--sa-color-soft);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sa-color);
+    font-size: 11px;
+  }
+
+  &.is-active {
+    color: var(--sa-color, var(--enso-gold));
+    background: var(--enso-ink);
+    box-shadow: inset 0 -2px 0 var(--sa-color, var(--enso-gold));
+  }
+}
+
+/* ===== Messages list ===== */
+.sa-message-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: var(--line-strong); }
+}
+
+.sa-msg {
+  display: flex;
+  gap: 10px;
+  font-family: var(--font-serif-tc);
+  font-size: 13px;
+  line-height: 1.8;
+
+  &-user {
+    justify-content: flex-end;
+
+    .sa-bubble {
+      background: var(--enso-gold);
+      color: var(--enso-ink);
+      border-radius: 12px 2px 12px 12px;
+      padding: 10px 14px;
+      max-width: 80%;
+      letter-spacing: 0.05em;
+    }
+  }
+
+  &-assistant {
+    .sa-msg-avatar {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(13, 15, 14, 0.6);
+      border: 1px solid var(--sa-color, var(--enso-gold));
+      color: var(--sa-color, var(--enso-gold));
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-serif-jp);
+      font-size: 13px;
+    }
+
+    .sa-msg-stack {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sa-msg-name {
+      font-family: var(--font-serif-jp);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--sa-color, var(--enso-gold));
+    }
+
+    .sa-bubble {
+      background: var(--enso-ink);
+      color: var(--enso-fg);
+      border: 1px solid var(--line);
+      border-left: 2px solid var(--sa-color, var(--enso-gold));
+      padding: 10px 14px;
+      max-width: 100%;
+
+      strong { color: var(--enso-gold); font-weight: 500; }
+      .sa-line { display: block; }
+    }
+  }
+}
+
+.sa-typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--enso-ink);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--sa-color, var(--enso-gold));
+  font-family: var(--font-serif-tc);
+  font-size: 12px;
+  color: var(--fg-muted);
+  letter-spacing: 0.1em;
+
+  .sa-dots {
+    display: inline-flex; gap: 3px;
+    span {
+      width: 4px; height: 4px; border-radius: 50%;
+      background: var(--sa-color, var(--enso-gold));
+      animation: ensoEmberGlow 1.4s ease-in-out infinite;
+    }
+    span:nth-child(2) { animation-delay: 0.15s; }
+    span:nth-child(3) { animation-delay: 0.3s; }
+  }
+}
+
+.sa-tool-badge {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  font-family: var(--font-latin-display);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: var(--fg-muted);
+}
+
+.sa-tool-done {
+  align-self: flex-start;
+  font-family: var(--font-serif-tc);
+  font-size: 11px;
+  color: var(--fg-dim);
+  letter-spacing: 0.15em;
+}
+
+/* ===== Handoff bar ===== */
+.sa-handoff {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  border-top: 1px dashed var(--line);
+  border-bottom: 1px dashed var(--line);
+  font-family: var(--font-serif-jp);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: var(--fg-muted);
+
+  &-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(13, 15, 14, 0.6);
+    border: 1px solid var(--sa-color, var(--enso-gold));
+    color: var(--sa-color, var(--enso-gold));
+
+    > span:first-child {
+      font-family: var(--font-serif-jp);
+      font-size: 12px;
+    }
+  }
+
+  &-arrow {
+    color: var(--fg-muted);
+  }
+
+  &-reason {
+    color: var(--fg-dim);
+    font-style: italic;
+    font-family: var(--font-serif-tc);
+    letter-spacing: 0.05em;
+  }
+}
+
+/* ===== Quick prompts ===== */
+.sa-quick-prompts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 18px 12px;
+
+  button {
+    text-align: left;
+    padding: 10px 14px;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--fg-muted);
+    font-family: var(--font-serif-tc);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: border-color 0.3s, color 0.3s;
+
+    &:hover {
+      border-color: var(--enso-gold);
+      color: var(--enso-fg);
+    }
+  }
+}
+
+/* ===== Input row ===== */
+.sa-input-row {
+  display: flex;
+  gap: 8px;
+  padding: 14px 14px 16px;
+  border-top: 1px solid var(--line);
+  background: var(--enso-ink);
+
+  textarea {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--enso-fg);
+    font-family: var(--font-serif-tc);
+    font-size: 13px;
+    padding: 10px 12px;
+    resize: none;
+    max-height: 120px;
+    transition: border-color 0.3s;
+
+    &::placeholder { color: var(--fg-dim); }
+    &:focus { outline: none; border-color: var(--enso-gold); }
+  }
+}
+
+.sa-send-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 0;
+  border: 1px solid var(--sa-color, var(--enso-gold));
+  background: var(--sa-color, var(--enso-gold));
+  color: var(--enso-ink);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s;
+
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+  i { font-size: 14px; }
+}
+
+/* Apply per-agent panel accent at root */
+.sa-panel-xiaohe { --sa-color: #c9a063; --sa-color-soft: rgba(201, 160, 99, 0.15); }
+.sa-panel-xiaoxiang { --sa-color: #d97757; --sa-color-soft: rgba(217, 119, 87, 0.15); }
+.sa-panel-xiaoguan { --sa-color: #8ba07a; --sa-color-soft: rgba(139, 160, 122, 0.15); }
