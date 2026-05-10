@@ -1,6 +1,5 @@
-import { Helmet } from "react-helmet-async";
-
 import { Seal, KanjiDivider } from "@/components/atoms";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const STORES = [
   {
@@ -27,11 +26,9 @@ const STORES = [
 ];
 
 export default function StoresPage(): JSX.Element {
+  usePageTitle("實體店面 · ENSO Kyoto");
   return (
     <div className="enso-stores">
-      <Helmet>
-        <title>實體店面 · ENSO Kyoto</title>
-      </Helmet>
       <header className="enso-stores__hero">
         <div className="t-eyebrow">Our Stores</div>
         <h1 className="enso-stores__title">

@@ -1,15 +1,13 @@
 import { Link } from "react-router";
-import { Helmet } from "react-helmet-async";
 
 import { JOURNAL } from "@/data/journal";
 import { Seal, KanjiDivider } from "@/components/atoms";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function JournalPage(): JSX.Element {
+  usePageTitle("香誌 · ENSO Kyoto");
   return (
     <div className="enso-journal">
-      <Helmet>
-        <title>香誌 · ENSO Kyoto</title>
-      </Helmet>
       <header className="enso-journal__hero">
         <div className="t-eyebrow">Journal</div>
         <h1 className="enso-journal__title">

@@ -1,22 +1,19 @@
 import { Link, Navigate, useParams } from "react-router";
-import { Helmet } from "react-helmet-async";
 
 import { JOURNAL } from "@/data/journal";
 import { Seal } from "@/components/atoms";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function JournalArticlePage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
   const article = JOURNAL.find((a) => a.id === id);
+  usePageTitle(article ? `${article.title} · 香誌` : null);
   if (!article) return <Navigate to="/404" replace />;
 
   const related = JOURNAL.filter((a) => a.id !== article.id).slice(0, 3);
 
   return (
     <article className="enso-journal-article">
-      <Helmet>
-        <title>{`${article.title} · 香誌`}</title>
-      </Helmet>
-
       <Link to="/journal" className="enso-journal-article__back">
         ← 返回香誌
       </Link>

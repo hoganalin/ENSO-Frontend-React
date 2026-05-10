@@ -13,7 +13,6 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
-import { HelmetProvider } from "react-helmet-async";
 import { RouterProvider } from "react-router";
 
 import { router } from "@/router";
@@ -24,11 +23,9 @@ if (!container) throw new Error("Root container missing in index.html");
 
 createRoot(container).render(
   <StrictMode>
-    <HelmetProvider>
-      <Provider store={store}>
-        <RouterProvider router={router} />
-      </Provider>
-    </HelmetProvider>
+    <Provider store={store}>
+      <RouterProvider router={router} />
+    </Provider>
   </StrictMode>,
 );
 

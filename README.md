@@ -12,7 +12,7 @@ ENSO 線香品牌前台的純 **React + Vite 7 + react-router 7 + TypeScript** �
 - **Redux Toolkit** + react-redux
 - **Tailwind CSS v4**（透過 `@tailwindcss/vite` plugin）
 - **Bootstrap 5** + Bootstrap Icons + SCSS
-- **react-helmet-async**（取代 Next `generateMetadata` 動態 title）
+- 自製 `usePageTitle` hook（取代 Next `generateMetadata` 動態 title — react-helmet-async 還沒支援 React 19，所以自己寫個 3 行 hook）
 - **Vitest** + Testing Library
 
 ## 與 Next.js 版本的差異
@@ -22,7 +22,7 @@ ENSO 線香品牌前台的純 **React + Vite 7 + react-router 7 + TypeScript** �
 | 路由 | App Router (RSC + route groups + dynamic segments) | react-router 7 `createBrowserRouter`（CSR-only） |
 | API | `app/api/{agent,events,candidate-cases}/route.ts` | 拔除全部，agent 預設 `MockAgentAdapter` |
 | Playground / Eval | `/playground`、`/playground/eval`（依賴後端 events / candidate-cases） | **整頁拔除**（請見 Next 版本） |
-| Metadata | `generateMetadata` / `generateStaticParams` | `react-helmet-async` 動態設 `<title>` |
+| Metadata | `generateMetadata` / `generateStaticParams` | `usePageTitle` hook 動態設 `document.title` |
 | 樣式 | `@tailwindcss/postcss` + postcss.config | `@tailwindcss/vite` plugin |
 | 環境變數 | `NEXT_PUBLIC_*` | `VITE_*` |
 | Bootstrap JS lazy load | `BootstrapClient` "use client" 元件 | `main.tsx` 直接 dynamic import |
