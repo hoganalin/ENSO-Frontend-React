@@ -58,7 +58,7 @@ const Contact = (): JSX.Element => {
           <dl>
             <div><dt>Address</dt><dd>京都市伏見区深草1-1-1</dd></div>
             <div><dt>Hours</dt><dd>火 – 日 · 11:00 – 19:00</dd></div>
-            <div><dt>Email</dt><dd>hello@enso-kyoto.com</dd></div>
+            <div><dt>Email</dt><dd>hello@enso.com</dd></div>
             <div><dt>Phone</dt><dd>+81 75-XXX-XXXX</dd></div>
           </dl>
         </aside>

@@ -5,7 +5,7 @@ import { Seal, KanjiDivider } from "@/components/atoms";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function JournalPage(): JSX.Element {
-  usePageTitle("香誌 · ENSO Kyoto");
+  usePageTitle("香誌 · ENSO");
   return (
     <div className="enso-journal">
       <header className="enso-journal__hero">

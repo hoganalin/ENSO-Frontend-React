@@ -59,7 +59,7 @@ function Footer(): JSX.Element {
       </div>
 
       <div className="enso-footer__bottom">
-        <span>© {new Date().getFullYear()} ENSO KYOTO</span>
+        <span>© {new Date().getFullYear()} ENSO</span>
         <span>和敬清寂 · 一期一会</span>
       </div>
     </footer>

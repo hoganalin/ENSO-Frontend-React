@@ -26,7 +26,7 @@ const STORES = [
 ];
 
 export default function StoresPage(): JSX.Element {
-  usePageTitle("實體店面 · ENSO Kyoto");
+  usePageTitle("實體店面 · ENSO");
   return (
     <div className="enso-stores">
       <header className="enso-stores__hero">

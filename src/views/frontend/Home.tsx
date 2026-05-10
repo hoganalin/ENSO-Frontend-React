@@ -99,7 +99,7 @@ export default function Home(): JSX.Element {
         </div>
 
         <div className="enso-hero__center" data-aos="fade-up">
-          <div className="enso-hero__eyebrow t-eyebrow">ENSO · KYOTO INCENSE · EST. 2018</div>
+          <div className="enso-hero__eyebrow t-eyebrow">ENSO · INCENSE · EST. 2018</div>
           <h1 className="enso-hero__title">
             <span className="block">點燃一縷香</span>
             <span className="block accent">靜下心</span>
