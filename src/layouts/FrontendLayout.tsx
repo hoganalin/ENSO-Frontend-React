@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Outlet, useLocation } from "react-router";
+import { Outlet, ScrollRestoration, useLocation } from "react-router";
 
 import AOS from "aos";
 
@@ -51,6 +51,7 @@ export default function FrontendLayout(): JSX.Element {
 
   return (
     <>
+      <ScrollRestoration />
       <MessageToast />
       <Header />
       <Breadcrumb />

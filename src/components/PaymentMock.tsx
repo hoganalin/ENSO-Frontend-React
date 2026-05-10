@@ -75,7 +75,7 @@ function PaymentMock({ orderId }: PaymentMockProps): JSX.Element {
       navigate(`/checkout-success/${orderId}?${qs.toString()}`);
     }, 2000);
     return () => clearTimeout(t);
-  }, [stage, orderId, methodId, merchantTradeNo, mockData.ecpayTradeNo, router]);
+  }, [stage, orderId, methodId, merchantTradeNo, mockData.ecpayTradeNo, navigate]);
 
   if (!method) {
     return (
