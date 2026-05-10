@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import { useLocation } from "react-router";
 
 const Breadcrumb = (): JSX.Element | null => {
-  const { pathname } = useLocation() || "/";
+  const { pathname } = useLocation();
 
   const rawPathnames = pathname.split("/").filter((x) => x);
   const pathnames = rawPathnames.filter(

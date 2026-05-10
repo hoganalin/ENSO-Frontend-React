@@ -21,6 +21,9 @@ dist-ssr
 *.tsbuildinfo
 tmp/
 
+# Vercel CLI metadata (project-id, environment links)
+.vercel
+
 # IDE / Editor
 .vscode/*
 !.vscode/extensions.json

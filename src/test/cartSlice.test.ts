@@ -6,6 +6,8 @@ const mockItem = {
   id: "cart-1",
   product_id: "prod-1",
   qty: 2,
+  total: 1000,
+  final_total: 1000,
   product: {
     id: "prod-1",
     title: "沉香線香",
