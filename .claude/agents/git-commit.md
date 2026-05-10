@@ -39,6 +39,6 @@ tools:
 
 ## 注意事項
 
-- 不 commit `.env`, `*.local`, `node_modules/`, `.next/`
+- 不 commit `.env`, `*.local`, `node_modules/`, `dist/`, `node_modules/.vite/`
 - 功能性修改前先跑 `npm run lint` 和 `npm test`
 - 如果 pre-commit hook 失敗，修復問題後建立新的 commit（不 amend）

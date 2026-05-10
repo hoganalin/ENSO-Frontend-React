@@ -13,6 +13,6 @@ paths: []
   - `docs` — 文件更新
   - `test` — 測試相關
   - `chore` — 建置、設定、依賴更新
-- 禁止 commit 的檔案：`.env`, `*.local`, `node_modules/`, `.next/`
+- 禁止 commit 的檔案：`.env`, `*.local`, `node_modules/`, `dist/`, `node_modules/.vite/`
 - 每次 commit 前確認無 lint 錯誤：`npm run lint`
 - 功能性修改 commit 前執行測試：`npm test`

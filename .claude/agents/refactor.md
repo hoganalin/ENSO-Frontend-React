@@ -14,9 +14,9 @@ tools:
 
 ## 專案背景
 
-- Next.js 16 App Router + Redux Toolkit + Bootstrap 5 + TypeScript
-- 元件在 `src/components/`，API 在 `src/services/`，slices 在 `src/slice/`
-- 路徑別名 `@` → `src/`
+- Vite 7 + React 19 + react-router 7 + Redux Toolkit + Bootstrap 5 + Tailwind v4 + TypeScript（純 SPA）
+- 元件在 `src/components/`、頁面在 `src/pages/`、layout 在 `src/layouts/`、API 在 `src/services/`、slices 在 `src/slice/`
+- 路徑別名 `@` → `src/`（同步維護於 `tsconfig.json` 與 `vite.config.ts`）
 
 ## 重構原則
 

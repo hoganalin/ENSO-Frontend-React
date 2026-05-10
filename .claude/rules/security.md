@@ -4,7 +4,8 @@ paths: []
 
 # 安全性規則
 
-- 永遠不要在程式碼中硬編碼 API key、token 或密碼，使用環境變數
+- 永遠不要在程式碼中硬編碼 API key、token 或密碼
+- 純 SPA 沒有 server-only secret：`VITE_*` 會在 build 時字面替換進 client bundle，**任何放進去的值都會公開**。敏感 key 不要透過 env 變數放進前端
 - 使用者輸入必須驗證後才能使用（react-hook-form validation）
 - 避免使用 `dangerouslySetInnerHTML`，如必要確保已消毒
 - Token 儲存：localStorage + cookie 雙重保存（配合現有架構）

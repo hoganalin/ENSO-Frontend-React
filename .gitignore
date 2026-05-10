@@ -17,15 +17,9 @@ dist-ssr
 .env.*
 !.env.example
 
-# Next.js / Vercel / TS build outputs
-.next/
-out/
-build/
+# Build outputs
 *.tsbuildinfo
 tmp/
-
-# Vercel
-.vercel
 
 # IDE / Editor
 .vscode/*
@@ -51,9 +45,3 @@ coverage/
 # Optional cache directories
 .npm
 .eslintcache
-.turbo
-
-# Agent event store: production 已搬到 Upstash Redis (src/app/api/events/route.ts)
-# 本機 dev 沒設 KV_REST_API_URL 時會 fallback 到此檔，但不該被 commit
-# （以前 commit 進去會被 build 進 lambda image，造成 production 讀到舊死資料）
-/data/agent-events.json
