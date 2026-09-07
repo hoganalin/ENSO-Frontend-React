@@ -14,6 +14,9 @@ import CheckoutSuccessPage from "@/pages/CheckoutSuccessPage";
 import PaymentMockPage from "@/pages/PaymentMockPage";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
+import MyReferralPage from "@/pages/MyReferralPage";
+import AdminSettingsPage from "@/pages/AdminSettingsPage";
+import AdminSmsLogPage from "@/pages/AdminSmsLogPage";
 import FaqPage from "@/pages/FaqPage";
 import ContactPage from "@/pages/ContactPage";
 import NotFoundPage from "@/pages/NotFoundPage";
@@ -37,6 +40,9 @@ export const router = createBrowserRouter([
       { path: "payment/mock/:orderId", element: <PaymentMockPage /> },
       { path: "login", element: <LoginPage /> },
       { path: "register", element: <RegisterPage /> },
+      { path: "referral", element: <MyReferralPage /> },
+      { path: "admin/settings", element: <AdminSettingsPage /> },
+      { path: "admin/sms", element: <AdminSmsLogPage /> },
       { path: "faq", element: <FaqPage /> },
       { path: "contact", element: <ContactPage /> },
       { path: "*", element: <NotFoundPage /> },

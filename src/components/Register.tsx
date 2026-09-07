@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, type JSX } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { Link } from "react-router";
-import { useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import Swal from "sweetalert2";
 
 import { emailValidation } from "../assets/utils/validation";
+import { signUp } from "@/services/db/auth";
 import { Seigaiha, KanjiDivider } from "./atoms";
 
 interface RegisterFormData {
@@ -12,15 +12,23 @@ interface RegisterFormData {
   email: string;
   password: string;
   confirmPassword: string;
+  referrerCode: string;
 }
 
 const Register = (): JSX.Element => {
+  const [searchParams] = useSearchParams();
+  // 推薦連結 https://.../register?ref=ENSO-XXXX → 自動帶入推薦碼
+  const refFromUrl = searchParams.get("ref") ?? "";
+
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<RegisterFormData>({ mode: "onTouched" });
+  } = useForm<RegisterFormData>({
+    mode: "onTouched",
+    defaultValues: { referrerCode: refFromUrl },
+  });
 
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -29,17 +37,31 @@ const Register = (): JSX.Element => {
   const onSubmit: SubmitHandler<RegisterFormData> = async (data) => {
     setLoading(true);
     try {
-      console.log("註冊資料：", data);
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await signUp({
+        email: data.email,
+        password: data.password,
+        name: data.username,
+        // 帶推薦碼 → DB 觸發器自動綁定推薦人（單層、永久固定）
+        referrerCode: data.referrerCode?.trim() || undefined,
+      });
       Swal.fire({
-        toast: true, position: "top-end", icon: "success",
-        title: "註冊成功！歡迎加入 ENSO。", showConfirmButton: false,
-        timer: 2000, timerProgressBar: true,
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "註冊成功！歡迎加入 ENSO。",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
       });
       navigate("/login");
     } catch (error) {
       console.error(error);
-      Swal.fire({ icon: "error", title: "註冊失敗", text: "註冊發生錯誤，請稍後再試。", confirmButtonColor: "#c9a063" });
+      Swal.fire({
+        icon: "error",
+        title: "註冊失敗",
+        text: error instanceof Error ? error.message : "註冊發生錯誤，請稍後再試。",
+        confirmButtonColor: "#c9a063",
+      });
     } finally {
       setLoading(false);
     }
@@ -106,7 +128,24 @@ const Register = (): JSX.Element => {
                 validate: (value) => value === passwordValue || "兩次輸入的密碼不一致",
               })}
             />
-            {errors.confirmPassword && <span className="enso-auth__error">{errors.confirmPassword.message}</span>}
+            {errors.confirmPassword && (
+              <span className="enso-auth__error">{errors.confirmPassword.message}</span>
+            )}
+          </label>
+
+          <label className="enso-auth__field">
+            <span className="t-eyebrow">推薦碼（選填）</span>
+            <input
+              type="text"
+              className="input-field-enso"
+              placeholder="有推薦碼請填入，例如 ENSO-XXXXX"
+              {...register("referrerCode")}
+            />
+            {refFromUrl && (
+              <span className="enso-auth__hint" style={{ fontSize: 12, color: "#8a8172" }}>
+                已自動帶入推薦碼，可修改或清空。
+              </span>
+            )}
           </label>
 
           <button type="submit" className="btn-gold enso-auth__submit" disabled={loading}>

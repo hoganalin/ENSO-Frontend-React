@@ -1,0 +1,184 @@
+- generic [ref=e2]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - link "ENSO Home" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img [ref=e7]
+        - generic [ref=e9]:
+          - generic [ref=e10]: ENSO
+          - generic [ref=e11]: 圓相 · 香
+      - navigation "Primary" [ref=e12]:
+        - link "本店 ほんてん" [ref=e13] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e14]: 本店
+          - generic [ref=e15]: ほんてん
+        - link "線香 せんこう" [ref=e16] [cursor=pointer]:
+          - /url: /product
+          - generic [ref=e17]: 線香
+          - generic [ref=e18]: せんこう
+        - link "香誌 こうし" [ref=e19] [cursor=pointer]:
+          - /url: /journal
+          - generic [ref=e20]: 香誌
+          - generic [ref=e21]: こうし
+        - link "店舖 てんぽ" [ref=e22] [cursor=pointer]:
+          - /url: /stores
+          - generic [ref=e23]: 店舖
+          - generic [ref=e24]: てんぽ
+        - link "品牌 ぶらんど" [ref=e25] [cursor=pointer]:
+          - /url: /about
+          - generic [ref=e26]: 品牌
+          - generic [ref=e27]: ぶらんど
+      - generic [ref=e28]:
+        - group [ref=e29]:
+          - generic "Open search" [ref=e30] [cursor=pointer]
+        - link "Login" [ref=e32] [cursor=pointer]:
+          - /url: /login
+          - generic [ref=e34]: 登入
+        - link "View shopping cart, 0 items" [ref=e35] [cursor=pointer]:
+          - /url: /cart
+          - generic [ref=e37]: 籠 · 0
+        - text: 
+  - main [ref=e38]:
+    - generic [ref=e39]:
+      - generic [ref=e40]:
+        - generic [ref=e43]: 一縷の煙、静寂への招待
+        - generic [ref=e45]:
+          - generic [ref=e46]: 圓
+          - generic [ref=e47]: 相
+        - generic [ref=e48]:
+          - generic [ref=e49]: ENSO · INCENSE · EST. 2018
+          - heading "點燃一縷香 靜下心" [level=1] [ref=e50]:
+            - generic [ref=e51]: 點燃一縷香
+            - generic [ref=e52]: 靜下心
+          - paragraph [ref=e53]: Find Your Inner Silence
+          - paragraph [ref=e54]: 每一縷煙 · 都是回歸自我的邀請
+          - generic [ref=e55]:
+            - link "Shop incense products" [ref=e56] [cursor=pointer]:
+              - /url: /product
+              - text: 選購線香 →
+            - link "Read brand story" [ref=e57] [cursor=pointer]:
+              - /url: /about
+              - text: 品牌故事
+        - generic [ref=e59]: スクロール
+        - img [ref=e62]
+      - generic [ref=e64]:
+        - generic [ref=e65]:
+          - generic [ref=e66]: Collection
+          - heading "香の四相" [level=2] [ref=e67]
+        - generic [ref=e68]:
+          - link "Relaxation 放鬆 釋放壓力 · 安眠修復 一日の終わり、ゆっくりと。" [ref=e69] [cursor=pointer]:
+            - /url: /product?category=放鬆
+            - generic: 鬆
+            - generic [ref=e70]: Relaxation
+            - generic [ref=e71]: 放鬆
+            - generic [ref=e72]: 釋放壓力 · 安眠修復
+            - generic [ref=e73]: 一日の終わり、ゆっくりと。
+          - link "Meditation 冥想 深度靜心 · 專注當下 心を静めて、今ここに。" [ref=e74] [cursor=pointer]:
+            - /url: /product?category=冥想
+            - generic: 禅
+            - generic [ref=e75]: Meditation
+            - generic [ref=e76]: 冥想
+            - generic [ref=e77]: 深度靜心 · 專注當下
+            - generic [ref=e78]: 心を静めて、今ここに。
+          - link "Purification 淨化 清淨能量 · 淨化空間 清らかな空間、新しい気。" [ref=e79] [cursor=pointer]:
+            - /url: /product?category=淨化
+            - generic: 淨
+            - generic [ref=e80]: Purification
+            - generic [ref=e81]: 淨化
+            - generic [ref=e82]: 清淨能量 · 淨化空間
+            - generic [ref=e83]: 清らかな空間、新しい気。
+          - link "Revival 復甦 晨間醒覺 · 生機回返 朝の光、新しい一日。" [ref=e84] [cursor=pointer]:
+            - /url: /product?category=復甦
+            - generic: 甦
+            - generic [ref=e85]: Revival
+            - generic [ref=e86]: 復甦
+            - generic [ref=e87]: 晨間醒覺 · 生機回返
+            - generic [ref=e88]: 朝の光、新しい一日。
+      - generic [ref=e91]:
+        - generic [ref=e92]:
+          - generic [ref=e93]: Featured
+          - heading "精選線香" [level=2] [ref=e94]
+        - link "查看全部" [ref=e95] [cursor=pointer]:
+          - /url: /product
+      - generic [ref=e97]:
+        - generic [ref=e99]: 禅
+        - paragraph [ref=e100]:
+          - text: 「香を聞く。
+          - text: 時を聞く。
+          - text: 己を聞く。」
+        - paragraph [ref=e101]: — ENSO Brand Philosophy
+      - generic [ref=e103]:
+        - link "Journal 香の読み物 關於香道、茶室、職人之手——六篇深度文章， 帶你進入京都人不寫在日曆上的歲時記。" [ref=e104] [cursor=pointer]:
+          - /url: /journal
+          - generic: 誌
+          - generic [ref=e105]: Journal
+          - heading "香の読み物" [level=3] [ref=e106]
+          - paragraph [ref=e107]: 關於香道、茶室、職人之手——六篇深度文章， 帶你進入京都人不寫在日曆上的歲時記。
+        - link "About 品牌故事 和敬清寂——ENSO 自 2018 年起，於京都伏見以 四項約束製香：選原料、捲手作、陰乾百日、檢驗百次。" [ref=e108] [cursor=pointer]:
+          - /url: /about
+          - generic: 縁
+          - generic [ref=e109]: About
+          - heading "品牌故事" [level=3] [ref=e110]
+          - paragraph [ref=e111]: 和敬清寂——ENSO 自 2018 年起，於京都伏見以 四項約束製香：選原料、捲手作、陰乾百日、檢驗百次。
+      - generic [ref=e112]:
+        - generic [ref=e115]: 香
+        - heading "一支香，一段呼吸" [level=2] [ref=e116]
+        - paragraph [ref=e117]: 不需要坐墊、不需要 App。 一支二十五分鐘的線香，就是你最好的冥想計時器。
+        - link "開始選香" [ref=e118] [cursor=pointer]:
+          - /url: /product
+  - contentinfo [ref=e119]:
+    - generic [ref=e120]:
+      - generic [ref=e121]:
+        - paragraph [ref=e122]: ENSO
+        - paragraph [ref=e123]: 京都・線香
+        - paragraph [ref=e124]: 天然手工線香品牌，致力於用香氣連結人們與內在寧靜。 一支線香，一段呼吸，一處靜謐之地。
+      - generic [ref=e125]:
+        - generic [ref=e126]:
+          - heading "Incense" [level=3] [ref=e127]
+          - list [ref=e128]:
+            - listitem [ref=e129]:
+              - link "全部商品" [ref=e130] [cursor=pointer]:
+                - /url: /product
+            - listitem [ref=e131]:
+              - link "放鬆系列" [ref=e132] [cursor=pointer]:
+                - /url: /product?category=放鬆
+            - listitem [ref=e133]:
+              - link "冥想系列" [ref=e134] [cursor=pointer]:
+                - /url: /product?category=冥想
+            - listitem [ref=e135]:
+              - link "淨化系列" [ref=e136] [cursor=pointer]:
+                - /url: /product?category=淨化
+            - listitem [ref=e137]:
+              - link "復甦系列" [ref=e138] [cursor=pointer]:
+                - /url: /product?category=復甦
+        - generic [ref=e139]:
+          - heading "Brand" [level=3] [ref=e140]
+          - list [ref=e141]:
+            - listitem [ref=e142]:
+              - link "品牌故事" [ref=e143] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e144]:
+              - link "香誌" [ref=e145] [cursor=pointer]:
+                - /url: /journal
+            - listitem [ref=e146]:
+              - link "實體店面" [ref=e147] [cursor=pointer]:
+                - /url: /stores
+        - generic [ref=e148]:
+          - heading "Service" [level=3] [ref=e149]
+          - list [ref=e150]:
+            - listitem [ref=e151]:
+              - link "常見問題" [ref=e152] [cursor=pointer]:
+                - /url: /faq
+            - listitem [ref=e153]:
+              - link "聯絡我們" [ref=e154] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=e155]:
+              - link "登入 / 註冊" [ref=e156] [cursor=pointer]:
+                - /url: /login
+    - generic [ref=e157]:
+      - generic [ref=e158]: © 2026 ENSO
+      - generic [ref=e159]: 和敬清寂 · 一期一会
+  - button "開啟購物助理" [ref=e160] [cursor=pointer]:
+    - generic:
+      - img
+    - generic: 問小禾

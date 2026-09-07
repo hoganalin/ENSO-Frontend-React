@@ -1,0 +1,111 @@
+// src/services/db/checkout.ts
+// 結帳流程 orchestration：算金額 → 建訂單 → 完成發購物金。
+// 純金額計算在 domain/orderTotals.ts（可測、不碰 DB）。
+import {
+  computeOrderTotals,
+  type CheckoutItem,
+  type OrderTotals,
+} from "@/domain/orderTotals";
+import type { MemberTier, Referrer } from "@/domain/storeCredit";
+import { supabase } from "@/lib/supabase";
+
+import { createOrder, markOrderCompleted, type NewOrderItem } from "./orders";
+import { listActivePromotions } from "./promotions";
+import { issueCreditForCompletedOrder } from "./storeCredit";
+import type { OrderRow, ProfileRow } from "./types";
+
+export type { CheckoutItem, OrderTotals } from "@/domain/orderTotals";
+
+/** 讀取後台活動後算金額（實際結帳用）。 */
+export async function buildOrderTotals(
+  items: CheckoutItem[],
+  memberTier: MemberTier,
+  couponCode: string | null,
+  couponStacksOrder = true,
+): Promise<OrderTotals> {
+  const promos = await listActivePromotions();
+  return computeOrderTotals(items, memberTier, promos, couponCode, couponStacksOrder);
+}
+
+export interface PlaceOrderParams {
+  buyerId: string;
+  items: CheckoutItem[];
+  memberTier: MemberTier;
+  couponCode?: string | null;
+  recipient: unknown;
+}
+
+/** 建立訂單（pending）：算金額 + 推薦歸戶 + 寫入 orders/order_items。 */
+export async function placeOrder(params: PlaceOrderParams): Promise<OrderRow> {
+  const totals = await buildOrderTotals(params.items, params.memberTier, params.couponCode ?? null);
+
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("referrer_id")
+    .eq("id", params.buyerId)
+    .single();
+  if (error) throw new Error(error.message);
+  const referrerId = (profile as { referrer_id: string | null }).referrer_id;
+
+  const orderItems: NewOrderItem[] = params.items.map((i) => ({
+    productId: i.productId,
+    title: i.title,
+    unitPrice: i.unitPrice,
+    qty: i.qty,
+  }));
+
+  return createOrder({
+    buyerId: params.buyerId,
+    referrerId,
+    items: orderItems,
+    subtotal: totals.subtotal,
+    discount: totals.discount,
+    shippingFee: totals.shippingFee,
+    total: totals.total,
+    appliedPromos: totals.appliedPromos,
+    recipient: params.recipient,
+  });
+}
+
+export interface CompleteOrderResult {
+  order: OrderRow;
+  /** 發出的購物金（0 = 未發，例如推薦人是金銀卡或無推薦人） */
+  creditIssued: number;
+}
+
+/**
+ * 付款成功後呼叫：標記完成 → 依「推薦人當下身分」發購物金 → 有發則記通知簡訊（模擬）。
+ */
+export async function completeOrder(orderId: string): Promise<CompleteOrderResult> {
+  const completedAtMs = Date.now();
+  const order = await markOrderCompleted(orderId, new Date(completedAtMs).toISOString());
+
+  if (!order.referrer_id) return { order, creditIssued: 0 };
+
+  // 推薦人「當下」身分（不是下單時的快照）
+  const { data: refData, error } = await supabase
+    .from("profiles")
+    .select("id, member_tier, phone")
+    .eq("id", order.referrer_id)
+    .single();
+  if (error) throw new Error(error.message);
+  const ref = refData as Pick<ProfileRow, "id" | "member_tier" | "phone">;
+  const referrer: Referrer = { id: ref.id, tier: ref.member_tier };
+
+  const creditRow = await issueCreditForCompletedOrder(
+    { id: order.id, buyerId: order.buyer_id ?? "", subtotal: order.subtotal, referrer },
+    completedAtMs,
+  );
+  if (!creditRow) return { order, creditIssued: 0 };
+
+  // 通知推薦人（demo 模擬簡訊；實戰改由後端呼叫簡訊商）
+  await supabase.from("sms_log").insert({
+    to_profile_id: ref.id,
+    to_phone: ref.phone,
+    message: `您推薦的訂單 ${order.order_no} 已完成，訂單金額 NT$${order.subtotal.toLocaleString()}，您獲得推薦購物金 NT$${creditRow.amount.toLocaleString()}。`,
+    related_order_id: order.id,
+    status: "sent",
+  });
+
+  return { order, creditIssued: creditRow.amount };
+}

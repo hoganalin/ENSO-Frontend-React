@@ -32,7 +32,7 @@ const authSlice = createSlice({
   reducers: {
     loginSuccess(
       state,
-      action: PayloadAction<{ token: string; user: { email: string } }>,
+      action: PayloadAction<{ token: string; user: { email: string; [key: string]: any } }>,
     ) {
       const { token, user } = action.payload;
       state.token = token;
@@ -52,7 +52,7 @@ const authSlice = createSlice({
     },
     restoreAuth(
       state,
-      action: PayloadAction<{ token: string; user: { email: string } }>,
+      action: PayloadAction<{ token: string; user: { email: string; [key: string]: any } }>,
     ) {
       state.token = action.payload.token;
       state.user = action.payload.user;

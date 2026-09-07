@@ -1,21 +1,21 @@
+// src/components/Login.tsx — 遷移到 Supabase 版本
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { Link } from "react-router";
-import { useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import Swal from "sweetalert2";
-import axios from "axios";
 
 import { emailValidation } from "../assets/utils/validation";
-import { adminApi } from "../services/api";
 import { loginSuccess } from "../slice/authSlice";
 import { Seigaiha, KanjiDivider } from "./atoms";
 import type { AppDispatch } from "../store/store";
+import * as db from "../services/db";
 
 interface LoginFormData {
   email: string;
   password: string;
 }
+
 const Login = (): JSX.Element => {
   const {
     register,
@@ -26,29 +26,63 @@ const Login = (): JSX.Element => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+  const [searchParams] = useSearchParams();
 
   const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
     setLoading(true);
-    const loginData = { username: data.email, password: data.password };
     try {
-      const res = await adminApi.post("/admin/signin", loginData);
-      const { token, expired } = res.data;
-      const user = { email: data.email };
-      localStorage.setItem("auth", JSON.stringify({ token, user, isAuthenticated: true }));
-      document.cookie = `hexToken=${token}; expires=${new Date(expired)}; path=/;`;
-      dispatch(loginSuccess({ token, user }));
+      // 使用 Supabase 登入
+      const authResponse = await db.auth.signIn(data.email, data.password);
+
+      // 取得目前使用者的 profile（包含身分、推薦碼等）
+      const profile = await db.auth.getCurrentProfile();
+
+      if (!profile) {
+        throw new Error("無法取得使用者資訊");
+      }
+
+      // 存儲登入訊息到 localStorage（供其他頁面使用）
+      localStorage.setItem("auth", JSON.stringify({
+        user: {
+          email: data.email,
+          id: authResponse.user?.id,
+          profile,
+        },
+        isAuthenticated: true,
+      }));
+
+      // 發送到 Redux
+      dispatch(loginSuccess({
+        token: authResponse.session?.access_token || "",
+        user: {
+          email: data.email,
+          id: authResponse.user?.id,
+          profile,
+        },
+      }));
+
       Swal.fire({
-        toast: true, position: "top-end", icon: "success",
-        title: "登入成功！", showConfirmButton: false,
-        timer: 2000, timerProgressBar: true,
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "登入成功！",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
       });
-      navigate("/product");
+
+      // 重定向到來源頁面或首頁
+      const redirectUrl = searchParams.get("redirect") || "/";
+      navigate(redirectUrl);
     } catch (error: unknown) {
-      console.error(error);
-      const message = axios.isAxiosError(error)
-        ? error.response?.data?.message || "請檢查帳號密碼"
-        : "請檢查帳號密碼";
-      Swal.fire({ icon: "error", title: "登入失敗", text: message, confirmButtonColor: "#c9a063" });
+      console.error("登入失敗:", error);
+      const message = error instanceof Error ? error.message : "請檢查帳號密碼";
+      Swal.fire({
+        icon: "error",
+        title: "登入失敗",
+        text: message,
+        confirmButtonColor: "#c9a063",
+      });
     } finally {
       setLoading(false);
     }

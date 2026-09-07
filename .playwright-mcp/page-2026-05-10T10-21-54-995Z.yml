@@ -1,0 +1,126 @@
+- generic [ref=e2]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - link "ENSO Home" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img [ref=e7]
+        - generic [ref=e9]:
+          - generic [ref=e10]: ENSO
+          - generic [ref=e11]: 圓相 · 香
+      - navigation "Primary" [ref=e12]:
+        - link "本店 ほんてん" [ref=e13] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e14]: 本店
+          - generic [ref=e15]: ほんてん
+        - link "線香 せんこう" [ref=e16] [cursor=pointer]:
+          - /url: /product
+          - generic [ref=e17]: 線香
+          - generic [ref=e18]: せんこう
+        - link "香誌 こうし" [ref=e19] [cursor=pointer]:
+          - /url: /journal
+          - generic [ref=e20]: 香誌
+          - generic [ref=e21]: こうし
+        - link "店舖 てんぽ" [ref=e22] [cursor=pointer]:
+          - /url: /stores
+          - generic [ref=e23]: 店舖
+          - generic [ref=e24]: てんぽ
+        - link "品牌 ぶらんど" [ref=e25] [cursor=pointer]:
+          - /url: /about
+          - generic [ref=e26]: 品牌
+          - generic [ref=e27]: ぶらんど
+      - generic [ref=e28]:
+        - group [ref=e29]:
+          - generic "Open search" [ref=e30] [cursor=pointer]
+        - link "Login" [ref=e32] [cursor=pointer]:
+          - /url: /login
+          - generic [ref=e34]: 登入
+        - link "View shopping cart, 0 items" [ref=e35] [cursor=pointer]:
+          - /url: /cart
+          - generic [ref=e37]: 籠 · 0
+        - text: 
+  - navigation "breadcrumb" [ref=e38]:
+    - list [ref=e39]:
+      - listitem [ref=e40]:
+        - link "首頁" [ref=e41] [cursor=pointer]:
+          - /url: /
+      - listitem [ref=e42]: / 所有產品
+  - main [ref=e43]:
+    - generic [ref=e44]:
+      - generic [ref=e45]:
+        - generic [ref=e46]: Collection
+        - heading "香の商い" [level=1] [ref=e47]
+        - paragraph [ref=e48]: 四相之香——放鬆・冥想・淨化・復甦。每一支線香，都是一次回歸自我的邀請。
+      - generic [ref=e49]:
+        - complementary "Category filters":
+          - generic:
+            - list
+        - generic [ref=e50]:
+          - generic [ref=e51]:
+            - generic [ref=e52]: All
+            - generic [ref=e53]:
+              - generic [ref=e54]: 排序
+              - combobox "排序" [ref=e55] [cursor=pointer]:
+                - option "預設" [selected]
+                - option "價格 · 低到高"
+                - option "價格 · 高到低"
+          - generic [ref=e57]:
+            - generic [ref=e58]: No Result
+            - heading "找不到「」" [level=4] [ref=e59]
+            - paragraph [ref=e60]: 請嘗試其他關鍵字，或查看全系列商品。
+            - button "查看所有商品" [ref=e61] [cursor=pointer]
+  - contentinfo [ref=e62]:
+    - generic [ref=e63]:
+      - generic [ref=e64]:
+        - paragraph [ref=e65]: ENSO
+        - paragraph [ref=e66]: 京都・線香
+        - paragraph [ref=e67]: 天然手工線香品牌，致力於用香氣連結人們與內在寧靜。 一支線香，一段呼吸，一處靜謐之地。
+      - generic [ref=e68]:
+        - generic [ref=e69]:
+          - heading "Incense" [level=3] [ref=e70]
+          - list [ref=e71]:
+            - listitem [ref=e72]:
+              - link "全部商品" [ref=e73] [cursor=pointer]:
+                - /url: /product
+            - listitem [ref=e74]:
+              - link "放鬆系列" [ref=e75] [cursor=pointer]:
+                - /url: /product?category=放鬆
+            - listitem [ref=e76]:
+              - link "冥想系列" [ref=e77] [cursor=pointer]:
+                - /url: /product?category=冥想
+            - listitem [ref=e78]:
+              - link "淨化系列" [ref=e79] [cursor=pointer]:
+                - /url: /product?category=淨化
+            - listitem [ref=e80]:
+              - link "復甦系列" [ref=e81] [cursor=pointer]:
+                - /url: /product?category=復甦
+        - generic [ref=e82]:
+          - heading "Brand" [level=3] [ref=e83]
+          - list [ref=e84]:
+            - listitem [ref=e85]:
+              - link "品牌故事" [ref=e86] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e87]:
+              - link "香誌" [ref=e88] [cursor=pointer]:
+                - /url: /journal
+            - listitem [ref=e89]:
+              - link "實體店面" [ref=e90] [cursor=pointer]:
+                - /url: /stores
+        - generic [ref=e91]:
+          - heading "Service" [level=3] [ref=e92]
+          - list [ref=e93]:
+            - listitem [ref=e94]:
+              - link "常見問題" [ref=e95] [cursor=pointer]:
+                - /url: /faq
+            - listitem [ref=e96]:
+              - link "聯絡我們" [ref=e97] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=e98]:
+              - link "登入 / 註冊" [ref=e99] [cursor=pointer]:
+                - /url: /login
+    - generic [ref=e100]:
+      - generic [ref=e101]: © 2026 ENSO
+      - generic [ref=e102]: 和敬清寂 · 一期一会
+  - button "開啟購物助理" [ref=e103] [cursor=pointer]:
+    - generic:
+      - img
+    - generic: 問小禾
