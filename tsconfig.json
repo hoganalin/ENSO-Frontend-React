@@ -25,5 +25,21 @@
     "types": ["vite/client", "node"]
   },
   "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    // Phase 3：ECPay / Mitake 已經搬到伺服器端（supabase/functions/，Deno）。
+    // 下面三支是舊的瀏覽器端實作 —— 用了 Node 的 crypto、把金鑰放在 client、
+    // 且有型別錯誤，放進 build 會讓 `npm run build` 失敗。
+    // 它們之所以還留著，只因為 src/pages/PaymentPage.tsx 仍 import 它們；
+    // PaymentPage 改寫成用 client.ts 之後，這四個檔案應該一起刪掉。
+    //
+    // ⚠️ 注意這裡是「逐檔」排除而不是整個資料夾：
+    //    新的前端入口 src/services/payment/client.ts 必須進 build（有測試）。
+    // supabase/functions/ 不在 include（只有 "src"）裡，所以不會被 tsc 掃到。
+    "src/services/payment/ecpay.ts",
+    "src/services/payment/index.ts",
+    "src/services/sms/mitake.ts",
+    "src/pages/PaymentPage.tsx"
+  ]
 }
