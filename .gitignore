@@ -48,3 +48,9 @@ coverage/
 # Optional cache directories
 .npm
 .eslintcache
+
+.vercel
+.env*.local
+
+# 本 session 的暫存／備份檔（可整個資料夾刪除）
+_to_delete/
