@@ -25,7 +25,12 @@ create index if not exists idx_orders_buyer_status
 -- 003 建的 view 沒有這一欄（當時 birthday 還不存在）。
 -- CREATE OR REPLACE VIEW 只允許在「欄位清單最後」新增欄位，
 -- 所以 birthday 放在最末，其餘順序保持與 003 完全一致。
-create or replace view public.member_summary
+-- 先 drop 再建：CREATE OR REPLACE VIEW 不允許減少欄位，
+-- 而 004 會在本 view 末端追加 birthday。若整包 migration 重跑，
+-- 這支會想用「較少的欄位」覆蓋回去而報 cannot drop columns from view。
+-- view 沒有其他物件相依，drop 後重建是安全的。
+drop view if exists public.member_summary;
+create view public.member_summary
 with (security_invoker = true) as
 select
   p.id,

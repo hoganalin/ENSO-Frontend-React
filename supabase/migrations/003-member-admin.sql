@@ -48,7 +48,12 @@ create index if not exists idx_profiles_created on public.profiles(created_at de
 -- ---------- 4. 會員彙總 view ----------
 -- 後台列表要顯示每位會員的訂單數／消費額／購物金餘額。
 -- 在 DB 端彙總，避免前端 N+1 查詢。
-create or replace view public.member_summary
+-- 先 drop 再建：CREATE OR REPLACE VIEW 不允許減少欄位，
+-- 而 004 會在本 view 末端追加 birthday。若整包 migration 重跑，
+-- 這支會想用「較少的欄位」覆蓋回去而報 cannot drop columns from view。
+-- view 沒有其他物件相依，drop 後重建是安全的。
+drop view if exists public.member_summary;
+create view public.member_summary
 with (security_invoker = true) as
 select
   p.id,
