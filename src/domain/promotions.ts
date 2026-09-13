@@ -8,7 +8,7 @@
 // ─────────────────────────────────────────────────────────────
 import type { MemberTier } from "./storeCredit";
 
-export type PromoGroup = "coupon" | "order" | "shipping" | "gift";
+export type PromoGroup = "coupon" | "order" | "shipping" | "gift" | "bundle";
 
 export interface CartLine {
   id: string;
@@ -19,7 +19,37 @@ export interface CartLine {
 export interface PromoContext {
   lines: CartLine[];
   member: MemberTier; // 'normal' | 'silver' | 'gold'
+  /**
+   * 買家生日月份（1-12）。沒填生日時為 undefined，
+   * 此時「生日禮」類活動一律不成立 —— 不知道生日就不該送禮。
+   */
+  birthdayMonth?: number;
+  /**
+   * 買家「本次結帳之前」已完成的訂單數。
+   * undefined 代表取不到（例如未登入），首購／回購類活動一律不成立。
+   */
+  completedOrderCount?: number;
+  /**
+   * 買家的「直接推薦人」profile id（profiles.referrer_id，單層、註冊時綁定）。
+   * undefined 代表「沒有推薦人」或「根本沒抓到」—— 兩種都讓
+   * 「指定推薦人」類活動不成立。絕對不能把 undefined 當成通過，
+   * 否則沒有推薦人的散客也會吃到白名單專屬折扣（這是首購優惠那個坑的同型）。
+   */
+  referrerId?: string;
 }
+
+/** 會員情境。傳字串時等同只給 tier，其餘欄位視為未知。 */
+export interface MemberContext {
+  tier: MemberTier;
+  birthdayMonth?: number;
+  completedOrderCount?: number;
+  /** 直接推薦人 profile id；取不到就留 undefined（見 PromoContext.referrerId）。 */
+  referrerId?: string;
+}
+
+export const normalizeMember = (
+  member: MemberTier | MemberContext,
+): MemberContext => (typeof member === "string" ? { tier: member } : member);
 
 export interface PromoEffect {
   /** 折抵金額（正數，會從小計扣除） */
@@ -90,8 +120,24 @@ export const lineTotalOf = (ctx: PromoContext, productId: string): number => {
   return line ? line.price * line.qty : 0;
 };
 
+/** 購物車總件數（給「任選 N 件」組合優惠判斷用） */
+export const qtyOf = (ctx: PromoContext): number =>
+  ctx.lines.reduce((sum, line) => sum + line.qty, 0);
+
+/** 指定的一組商品是否都在購物車裡（給「系列組合價」判斷用） */
+export const hasAllProducts = (ctx: PromoContext, productIds: string[]): boolean =>
+  productIds.length > 0 &&
+  productIds.every((id) => ctx.lines.some((l) => l.id === id && l.qty > 0));
+
+/** 指定的一組商品「各取一件」的原價合計（系列組合價的折抵基準） */
+export const setPriceBaseOf = (ctx: PromoContext, productIds: string[]): number =>
+  productIds.reduce((sum, id) => {
+    const line = ctx.lines.find((l) => l.id === id);
+    return sum + (line ? line.price : 0);
+  }, 0);
+
 /** 會彼此互斥的群組（可併用開關關閉時，這些群組只會套用一個） */
-const EXCLUSIVE_GROUPS: PromoGroup[] = ["coupon", "order"];
+const EXCLUSIVE_GROUPS: PromoGroup[] = ["coupon", "order", "bundle"];
 
 /**
  * 套用活動：找出符合條件的活動 → 依優先序排序 → 逐一套用，同時處理互斥。

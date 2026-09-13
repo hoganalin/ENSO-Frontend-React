@@ -2,7 +2,9 @@
 // 訂單金額計算（純邏輯，不碰 DB）：把購物車 + 活動丟進引擎，算出結帳金額。
 import {
   applyPromotions,
+  normalizeMember,
   type CartLine,
+  type MemberContext,
   type Promo,
   type PromoContext,
   type PromoOptions,
@@ -41,7 +43,7 @@ export interface OrderTotals {
  */
 export function computeOrderTotals(
   items: CheckoutItem[],
-  member: MemberTier,
+  member: MemberTier | MemberContext,
   promos: Promo[],
   couponCode: string | null,
   couponStacksOrder = true,
@@ -51,7 +53,15 @@ export function computeOrderTotals(
     price: i.unitPrice,
     qty: i.qty,
   }));
-  const ctx: PromoContext = { lines, member };
+  // 傳字串時等同只給 tier，生日／首購／回購類活動會因資訊不足而不成立。
+  const m = normalizeMember(member);
+  const ctx: PromoContext = {
+    lines,
+    member: m.tier,
+    birthdayMonth: m.birthdayMonth,
+    completedOrderCount: m.completedOrderCount,
+    referrerId: m.referrerId,
+  };
 
   const autos = promos.filter((p) => p.auto);
   const coupon = couponCode
