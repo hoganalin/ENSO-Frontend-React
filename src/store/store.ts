@@ -5,6 +5,7 @@ import messageReducer from "../slice/messageSlice";
 import authReducer from "../slice/authSlice";
 import agentReducer from "../slice/agentSlice";
 import themeReducer from "../slice/themeSlice";
+import promoReducer from "../slice/promoSlice";
 
 export const store = configureStore({
   reducer: {
@@ -13,6 +14,7 @@ export const store = configureStore({
     auth: authReducer,
     agent: agentReducer,
     theme: themeReducer,
+    promo: promoReducer,
   },
 });
 

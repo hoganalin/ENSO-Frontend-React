@@ -1,47 +1,61 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router";
-import axios from "axios";
 import type { RootState, AppDispatch } from "../store/store";
 
 import { currency } from "../assets/utils/filter";
+import useMemberContext from "../hooks/useMemberContext";
 import useMessage from "../hooks/useMessage";
+import usePromoPreview from "../hooks/usePromoPreview";
 import {
   createAsyncDeleteAllCart,
   createAsyncDeleteSingleCart,
   createAsyncUpdateCart,
-  createAsyncGetCart,
 } from "../slice/cartSlice";
-import { applyCouponApi } from "../services/coupon";
+import { clearCouponCode, setCouponCode } from "../slice/promoSlice";
+import type { CheckoutItem } from "../domain/orderTotals";
 
 function Cart(): JSX.Element {
   const carts = useSelector((state: RootState) => state.cart.carts);
+  const appliedCoupon = useSelector((state: RootState) => state.promo.couponCode);
+  // 會員情境（等級／生日月／已完成訂單數）；生日禮、首購、回購類活動要用
+  const { context: memberContext } = useMemberContext();
   const dispatch = useDispatch<AppDispatch>();
   const { showSuccess, showError } = useMessage();
   const [loadingCartId, setLoadingCartId] = useState("");
+  const [couponInput, setCouponInput] = useState("");
 
-  const [couponCode, setCouponCode] = useState("");
-  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  // 購物車 → 活動引擎的輸入。注意用 product_id（商品 id），不是 cartItem.id（購物車列 id）。
+  const items = useMemo<CheckoutItem[]>(
+    () =>
+      carts.map((c) => ({
+        productId: c.product_id,
+        title: c.product.title,
+        unitPrice: c.product.price,
+        qty: c.qty,
+      })),
+    [carts],
+  );
 
-  const handleApplyCoupon = async () => {
-    if (!couponCode) {
+  const { result, couponStatus, loading: promosLoading } = usePromoPreview(
+    items,
+    memberContext ?? "normal",
+    appliedCoupon,
+  );
+
+  const handleApplyCoupon = () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) {
       showError("請輸入優惠代碼");
       return;
     }
-    setIsApplyingCoupon(true);
-    try {
-      await applyCouponApi(couponCode);
-      showSuccess("優惠券套用成功");
-      dispatch(createAsyncGetCart()); // 重新刷購物車資訊取得折扣價格
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        showError(error.response?.data?.message || "優惠券套用失敗");
-      } else {
-        showError("優惠券套用失敗");
-      }
-    } finally {
-      setIsApplyingCoupon(false);
-    }
+    // 套用只是把 code 寫進 store，實際成立與否由引擎判定（見下方 couponStatus）。
+    dispatch(setCouponCode(code));
+  };
+
+  const handleRemoveCoupon = () => {
+    dispatch(clearCouponCode());
+    setCouponInput("");
   };
 
   const handleDeleteSingleCart = async (
@@ -60,12 +74,11 @@ function Cart(): JSX.Element {
     }
   };
 
-  const handleDeleteAllCart = async (
-    e: React.MouseEvent<HTMLButtonElement>,
-  ) => {
+  const handleDeleteAllCart = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     try {
       await dispatch(createAsyncDeleteAllCart()).unwrap();
+      dispatch(clearCouponCode());
       showSuccess("購物車已成功清空");
     } catch (error: unknown) {
       showError(typeof error === "string" ? error : "清空失敗");
@@ -216,33 +229,129 @@ function Cart(): JSX.Element {
               </div>
             </div>
           ))}
+
+          {/* 優惠碼 */}
           <div className="flex my-4">
             <input
               type="text"
               className="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg outline-none focus:ring-2 focus:ring-enso-primary"
               placeholder="有優惠碼嗎"
-              value={couponCode}
-              onChange={(e) => setCouponCode(e.target.value)}
+              value={couponInput}
+              onChange={(e) => setCouponInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleApplyCoupon();
+              }}
             />
             <button
               className="bg-enso-primary text-white px-4 py-2 rounded-r-lg hover:bg-enso-primary/90 disabled:opacity-50 transition"
               type="button"
               onClick={handleApplyCoupon}
-              disabled={isApplyingCoupon || !couponCode}
+              disabled={promosLoading || !couponInput.trim()}
             >
-              {isApplyingCoupon ? (
+              {promosLoading ? (
                 <i className="fas fa-spinner fa-spin"></i>
               ) : (
                 "套用優惠券"
               )}
             </button>
           </div>
-          <div className="flex justify-between mt-4 border-t border-gray-200 pt-4">
-            <p className="text-xl font-bold">總計</p>
-            <p className="text-xl font-bold text-enso-gold">
-              NT${currency(carts.reduce((acc, item) => acc + item.total, 0))}
-            </p>
+
+          {couponStatus && (
+            <div
+              className={`text-sm mb-2 flex items-center justify-between ${
+                couponStatus.ok ? "text-green-700" : "text-red-600"
+              }`}
+              role="status"
+            >
+              <span>
+                <i
+                  className={`fas ${
+                    couponStatus.ok ? "fa-check-circle" : "fa-exclamation-circle"
+                  } mr-1`}
+                ></i>
+                {couponStatus.message}
+              </span>
+              {appliedCoupon && (
+                <button
+                  type="button"
+                  className="underline text-gray-500 hover:text-gray-800"
+                  onClick={handleRemoveCoupon}
+                >
+                  移除
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* 金額明細（引擎試算） */}
+          <div className="mt-4 border-t border-gray-200 pt-4 space-y-2">
+            <div className="flex justify-between text-gray-700">
+              <span>小計</span>
+              <span>NT${currency(result?.subtotal ?? 0)}</span>
+            </div>
+
+            {result?.applied
+              .filter((a) => (a.amount ?? 0) > 0)
+              .map((a) => (
+                <div
+                  key={a.promo.id}
+                  className="flex justify-between text-green-700 text-sm"
+                >
+                  <span>
+                    <i className="fas fa-tag mr-1"></i>
+                    {a.label}
+                  </span>
+                  <span>−NT${currency(a.amount ?? 0)}</span>
+                </div>
+              ))}
+
+            <div className="flex justify-between text-gray-700">
+              <span>運費</span>
+              <span>
+                {result?.freeShip ? (
+                  <>
+                    <s className="text-gray-400 mr-1">
+                      NT${currency(result.shippingFee || 0)}
+                    </s>
+                    <span className="text-green-700">免運</span>
+                  </>
+                ) : (
+                  `NT$${currency(result?.shippingFee ?? 0)}`
+                )}
+              </span>
+            </div>
+
+            {result?.gift && (
+              <div className="flex justify-between text-enso-gold text-sm">
+                <span>
+                  <i className="fas fa-gift mr-1"></i>贈品
+                </span>
+                <span>{result.gift}</span>
+              </div>
+            )}
+
+            {/* 被互斥規則擋掉的活動：讓使用者知道為什麼沒折到 */}
+            {result?.skipped.map((s) => (
+              <div
+                key={s.promo.id}
+                className="flex justify-between text-gray-400 text-xs"
+              >
+                <span>
+                  <i className="fas fa-ban mr-1"></i>
+                  {s.promo.name}
+                </span>
+                <span>{s.reason}</span>
+              </div>
+            ))}
+
+            <div className="flex justify-between pt-2 border-t border-gray-200">
+              <p className="text-xl font-bold">總計</p>
+              <p className="text-xl font-bold text-enso-gold">
+                NT${currency(result?.total ?? 0)}
+              </p>
+            </div>
           </div>
+
           {carts.length === 0 ? (
             <button
               // 購物車空的（disabled 狀態）

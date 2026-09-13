@@ -6,9 +6,11 @@ import {
   type CheckoutItem,
   type OrderTotals,
 } from "@/domain/orderTotals";
+import type { MemberContext } from "@/domain/promotions";
 import type { MemberTier, Referrer } from "@/domain/storeCredit";
 import { supabase } from "@/lib/supabase";
 
+import { getMemberContext } from "./memberContext";
 import { createOrder, markOrderCompleted, type NewOrderItem } from "./orders";
 import { listActivePromotions } from "./promotions";
 import { issueCreditForCompletedOrder } from "./storeCredit";
@@ -16,15 +18,21 @@ import type { OrderRow, ProfileRow } from "./types";
 
 export type { CheckoutItem, OrderTotals } from "@/domain/orderTotals";
 
-/** 讀取後台活動後算金額（實際結帳用）。 */
+/**
+ * 讀取後台活動後算金額（實際結帳用）。
+ *
+ * member 可以只傳等級字串（生日／首購／回購類活動會因資訊不足而不成立），
+ * 或傳完整的 MemberContext。購物車試算與結帳務必傳同一份情境，
+ * 否則畫面金額會與寫進 DB 的金額不一致。
+ */
 export async function buildOrderTotals(
   items: CheckoutItem[],
-  memberTier: MemberTier,
+  member: MemberTier | MemberContext,
   couponCode: string | null,
   couponStacksOrder = true,
 ): Promise<OrderTotals> {
   const promos = await listActivePromotions();
-  return computeOrderTotals(items, memberTier, promos, couponCode, couponStacksOrder);
+  return computeOrderTotals(items, member, promos, couponCode, couponStacksOrder);
 }
 
 export interface PlaceOrderParams {
@@ -33,20 +41,67 @@ export interface PlaceOrderParams {
   memberTier: MemberTier;
   couponCode?: string | null;
   recipient: unknown;
+  /**
+   * 購物車試算時用的會員情境。傳進來可省一次查詢，
+   * 也保證「畫面看到的折扣」與「寫進 DB 的折扣」出自同一份情境。
+   */
+  memberContext?: MemberContext;
+}
+
+/**
+ * 取得「推薦人」下單當下的會員等級，寫進 orders.referrer_tier_snapshot。
+ *
+ * 只收 referrerId —— 刻意不收整個 profile 或 buyerId，避免再次把買家的
+ * 身分存成推薦人的快照（見 placeOrder 內的說明）。
+ * 沒有推薦人回 null；查不到也回 null，讓 completeOrder 退回查當下身分。
+ */
+async function fetchReferrerTier(referrerId: string | null): Promise<MemberTier | null> {
+  if (!referrerId) return null;
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("member_tier")
+    .eq("id", referrerId)
+    .maybeSingle();
+
+  if (error) {
+    // 快照取不到不該擋住下單：留 null，完成訂單時會查推薦人當下身分。
+    console.error("[checkout] 推薦人身分快照讀取失敗：", error.message);
+    return null;
+  }
+  return (data as { member_tier: MemberTier } | null)?.member_tier ?? null;
 }
 
 /** 建立訂單（pending）：算金額 + 推薦歸戶 + 寫入 orders/order_items。 */
 export async function placeOrder(params: PlaceOrderParams): Promise<OrderRow> {
-  const totals = await buildOrderTotals(params.items, params.memberTier, params.couponCode ?? null);
+  const memberContext =
+    params.memberContext ??
+    (await getMemberContext(params.buyerId, params.memberTier));
+
+  const totals = await buildOrderTotals(
+    params.items,
+    memberContext,
+    params.couponCode ?? null,
+  );
 
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("referrer_id, member_tier")
+    .select("referrer_id")
     .eq("id", params.buyerId)
     .single();
   if (error) throw new Error(error.message);
-  const referrerId = (profile as { referrer_id: string | null; member_tier: string }).referrer_id;
-  const buyerMemberTier = (profile as { referrer_id: string | null; member_tier: string }).member_tier;
+  const referrerId = (profile as { referrer_id: string | null }).referrer_id;
+
+  // 推薦人下單當下的身分快照。
+  //
+  // ⚠️ 這裡曾經有一個會算錯錢的 bug：原本查的是「買家」的 member_tier
+  // （`profiles.eq("id", buyerId).member_tier`），卻存進 referrer_tier_snapshot。
+  // 購物金資格就是看這個欄位（只有 normal 身分的推薦人能拿），所以錯得兩邊都會痛：
+  //   • 買家 normal、推薦人金卡 → 快照存 normal → 金卡被錯發購物金
+  //   • 買家金卡、推薦人 normal → 快照存 gold → 有資格的人被錯扣
+  // 現在改成用 referrerId 去查，而且獨立成一支只收 referrerId 的函式，
+  // 讓「傳錯人」在型別與命名上就說不通。
+  const referrerTierSnapshot = await fetchReferrerTier(referrerId);
 
   const orderItems: NewOrderItem[] = params.items.map((i) => ({
     productId: i.productId,
@@ -65,8 +120,7 @@ export async function placeOrder(params: PlaceOrderParams): Promise<OrderRow> {
     total: totals.total,
     appliedPromos: totals.appliedPromos,
     recipient: params.recipient,
-    // 🔧 漏洞 2 修復：記錄下單時推薦人的身分快照
-    referrerTierSnapshot: referrerId ? buyerMemberTier : null,
+    referrerTierSnapshot,
   });
 }
 

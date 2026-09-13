@@ -1,21 +1,20 @@
 // src/components/Checkout.tsx — Supabase 版本
-// 🔧 漏洞 1, 4 修復：添加認證驗證和錯誤恢復
+// 金額一律由 db.checkout.buildOrderTotals()（= 活動引擎）計算，
+// 與 placeOrder() 寫進 orders 的金額走同一條路徑，避免畫面與 DB 不一致。
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router";
 import Swal from "sweetalert2";
 import { RootState, AppDispatch } from "../store/store";
 import { clearCart } from "../slice/cartSlice";
+import { clearCouponCode } from "../slice/promoSlice";
 import * as db from "../services/db";
+import useMemberContext from "../hooks/useMemberContext";
 import { requireAuth } from "../lib/supabase-auth";
-
-interface OrderData {
-  subtotal: number;
-  discount: number;
-  shipping_fee: number;
-  total: number;
-}
+import { currency } from "../assets/utils/filter";
+import type { CheckoutItem, OrderTotals } from "../domain/orderTotals";
+import type { MemberTier } from "../domain/storeCredit";
 
 const Checkout = (): JSX.Element => {
   const dispatch = useDispatch<AppDispatch>();
@@ -23,12 +22,30 @@ const Checkout = (): JSX.Element => {
 
   const cartItems = useSelector((state: RootState) => state.cart.carts);
   const auth = useSelector((state: RootState) => state.auth);
+  const couponCode = useSelector((state: RootState) => state.promo.couponCode);
 
   const [loading, setLoading] = useState(false);
-  const [orderData, setOrderData] = useState<OrderData | null>(null);
+  const [totals, setTotals] = useState<OrderTotals | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // 🔧 漏洞 4 修復：驗證用戶認證
+  const memberTier = (auth.user?.member_tier ?? "normal") as MemberTier;
+  // 與購物車共用同一支 hook，確保兩頁算出的折扣一致
+  const { context: memberContext } = useMemberContext();
+
+  // 購物車 → 結帳品項。productId 必須是商品 id（product_id），
+  // 不是購物車列 id，否則 order_items.product_id 會寫錯外鍵。
+  const items = useMemo<CheckoutItem[]>(
+    () =>
+      cartItems.map((item) => ({
+        productId: item.product_id,
+        title: item.product.title,
+        unitPrice: item.product.price,
+        qty: item.qty,
+      })),
+    [cartItems],
+  );
+
+  // 驗證用戶認證
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -48,7 +65,7 @@ const Checkout = (): JSX.Element => {
     checkAuth();
   }, [navigate]);
 
-  // 計算訂單金額
+  // 用活動引擎試算訂單金額（與 placeOrder 同一條計算路徑）
   useEffect(() => {
     if (!cartItems.length) {
       Swal.fire({
@@ -60,62 +77,64 @@ const Checkout = (): JSX.Element => {
       return;
     }
 
-    // 計算小計
-    const subtotal = cartItems.reduce((sum, item) => {
-      return sum + (item.product.price * item.qty);
-    }, 0);
+    let cancelled = false;
+    if (!memberContext) return;
 
-    // 簡化版：無折扣、運費 100
-    const discount = 0;
-    const shipping_fee = 100;
-    const total = subtotal + shipping_fee;
+    db.checkout
+      .buildOrderTotals(items, memberContext, couponCode)
+      .then((t) => {
+        if (!cancelled) setTotals(t);
+      })
+      .catch((error: unknown) => {
+        console.error("試算訂單金額失敗:", error);
+        if (!cancelled) {
+          Swal.fire({
+            icon: "error",
+            title: "試算失敗",
+            text: "無法取得活動資訊，請重新整理後再試",
+            confirmButtonColor: "#c9a063",
+          });
+        }
+      });
 
-    setOrderData({
-      subtotal,
-      discount,
-      shipping_fee,
-      total,
-    });
-  }, [cartItems, navigate]);
+    return () => {
+      cancelled = true;
+    };
+  }, [items, memberContext, couponCode, cartItems.length, navigate]);
 
-  const handleCheckout = async () => {
-    if (!orderData || !auth.user?.id) return;
+  const handleCheckout = useCallback(async () => {
+    if (!totals) return;
 
     setLoading(true);
     try {
-      // 🔧 漏洞 4 修復：重新驗證認證
       const userId = await requireAuth();
 
-      // 建立訂單
       const order = await db.checkout.placeOrder({
         buyerId: userId,
-        items: cartItems.map(item => ({
-          productId: item.id,
-          title: item.product.title,
-          unitPrice: item.product.price,
-          qty: item.qty,
-        })),
-        memberTier: auth.user.member_tier || "normal",
-        couponCode: null,
+        items,
+        memberTier,
+        couponCode,
         recipient: null,
+        // 傳入試算時用的同一份情境，避免建單時重算出不同折扣
+        memberContext: memberContext ?? undefined,
       });
 
       if (!order?.id) {
         throw new Error("訂單建立失敗");
       }
 
-      // 清空購物車
       dispatch(clearCart());
+      dispatch(clearCouponCode());
 
-      Swal.fire({
+      await Swal.fire({
         icon: "success",
         title: "訂單已建立",
         text: `訂單編號: ${order.order_no}`,
         confirmButtonColor: "#c9a063",
-      }).then(() => {
-        // 導向到支付頁面，並傳遞訂單 ID
-        navigate("/payment", { state: { orderId: order.id } });
       });
+
+      // 導向付款頁（orderId 走網址參數，重新整理不會遺失）
+      navigate(`/payment/mock/${order.id}`);
     } catch (error: unknown) {
       console.error("結帳失敗:", error);
       const message = error instanceof Error ? error.message : "結帳失敗，請重試";
@@ -129,7 +148,7 @@ const Checkout = (): JSX.Element => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [totals, items, memberTier, memberContext, couponCode, dispatch, navigate]);
 
   if (authError) {
     return (
@@ -140,7 +159,7 @@ const Checkout = (): JSX.Element => {
     );
   }
 
-  if (!orderData) {
+  if (!totals) {
     return <div className="checkout-container loading">載入中...</div>;
   }
 
@@ -151,10 +170,12 @@ const Checkout = (): JSX.Element => {
       <div className="order-summary">
         <h2>訂單摘要</h2>
         <div className="order-items">
-          {cartItems.map(item => (
+          {cartItems.map((item) => (
             <div key={item.id} className="order-item">
-              <span>{item.product.title} × {item.qty}</span>
-              <span>¥{item.product.price * item.qty}</span>
+              <span>
+                {item.product.title} × {item.qty}
+              </span>
+              <span>NT${currency(item.product.price * item.qty)}</span>
             </div>
           ))}
         </div>
@@ -162,24 +183,40 @@ const Checkout = (): JSX.Element => {
         <div className="order-totals">
           <div>
             <span>小計：</span>
-            <span>¥{orderData.subtotal}</span>
+            <span>NT${currency(totals.subtotal)}</span>
           </div>
+
+          {totals.appliedPromos
+            .filter((p) => (p.amount ?? 0) > 0)
+            .map((p) => (
+              <div key={p.id} className="order-discount">
+                <span>{p.name}：</span>
+                <span>−NT${currency(p.amount ?? 0)}</span>
+              </div>
+            ))}
+
           <div>
             <span>運費：</span>
-            <span>¥{orderData.shipping_fee}</span>
+            <span>
+              {totals.shippingFee === 0 ? "免運" : `NT$${currency(totals.shippingFee)}`}
+            </span>
           </div>
+
+          {totals.gift && (
+            <div className="order-gift">
+              <span>贈品：</span>
+              <span>{totals.gift}</span>
+            </div>
+          )}
+
           <div className="total">
             <strong>合計：</strong>
-            <strong>¥{orderData.total}</strong>
+            <strong>NT${currency(totals.total)}</strong>
           </div>
         </div>
       </div>
 
-      <button
-        onClick={handleCheckout}
-        disabled={loading}
-        className="btn-gold"
-      >
+      <button onClick={handleCheckout} disabled={loading} className="btn-gold">
         {loading ? "處理中…" : "前往支付"}
       </button>
     </div>
