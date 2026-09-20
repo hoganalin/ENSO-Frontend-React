@@ -148,7 +148,7 @@ create policy invoices_read on public.invoices
 -- 如果這裡失敗，代表資料庫裡已經有重複發放的資料 —— 那是必須人工處理的帳務問題，
 -- 所以只發 notice 不讓整個 migration 中斷（其他物件還是要建起來）。
 do $$ begin
-  create unique index uq_credit_earn_per_order
+  create unique index if not exists uq_credit_earn_per_order
     on public.store_credit_ledger(order_id)
     where type = 'earn' and order_id is not null;
 exception
