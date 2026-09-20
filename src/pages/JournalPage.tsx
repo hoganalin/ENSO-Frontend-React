@@ -1,10 +1,22 @@
 import { Link } from "react-router";
+import { useEffect, useState } from "react";
 
 import { JOURNAL } from "@/data/journal";
 import { Seal, KanjiDivider } from "@/components/atoms";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { listPublishedJournal } from "@/services/db/journal";
 
 export default function JournalPage(): JSX.Element {
+  const [articles,setArticles]=useState(JOURNAL);
+  const [error,setError]=useState(false);
+  const [loading,setLoading]=useState(true);
+  const [attempt,setAttempt]=useState(0);
+  useEffect(()=>{
+    let active=true;setLoading(true);setError(false);
+    listPublishedJournal().then(rows=>{if(active)setArticles(rows);}).catch(()=>{if(active)setError(true);})
+      .finally(()=>{if(active)setLoading(false);});
+    return ()=>{active=false;};
+  },[attempt]);
   usePageTitle("香誌 · ENSO");
   return (
     <div className="enso-journal">
@@ -21,7 +33,10 @@ export default function JournalPage(): JSX.Element {
       </header>
 
       <section className="enso-journal__grid">
-        {JOURNAL.map((article, i) => (
+        {loading && <p role="status">正在讀取最新文章…</p>}
+        {error && <p role="alert">最新文章暫時無法讀取，您仍可閱讀下列香誌。<button onClick={()=>setAttempt(n=>n+1)}>重新讀取</button></p>}
+        {!loading && !articles.length && <p>目前沒有已發布文章。</p>}
+        {articles.map((article, i) => (
           <Link
             key={article.id}
             to={`/journal/${article.id}`}

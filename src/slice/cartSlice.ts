@@ -1,8 +1,9 @@
-import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction, Dispatch } from "@reduxjs/toolkit";
 import axios from "axios";
 
 import {
   addCartApi,
+  clearStoredCart,
   deleteAllCartApi,
   deleteSingleCartApi,
   getCartApi,
@@ -67,7 +68,7 @@ const cartSlice = createSlice({
       state.final_total = action.payload.final_total;
     },
     // ✅ 新增：清空購物車
-    clearCart: (state) => {
+    cartCleared: (state) => {
       state.carts = [];
       state.total = 0;
       state.final_total = 0;
@@ -75,79 +76,65 @@ const cartSlice = createSlice({
   },
 });
 
-export const createAsyncGetCart = createAsyncThunk(
-  "cart/createAsyncGetCart",
-  async (_, { dispatch, rejectWithValue }) => {
-    try {
-      const response = await getCartApi();
+let clearVersion = 0;
 
-      dispatch(updateCart(response.data.data));
-      return response.data.data;
-    } catch (error: unknown) {
-      console.error(extractErrorMessage(error));
-      return rejectWithValue(extractErrorMessage(error));
-    }
+// Persistence is kept outside reducers so reducers remain deterministic.
+export const clearCart = () => (dispatch: Dispatch) => {
+  clearStoredCart();
+  clearVersion += 1;
+  dispatch(cartSlice.actions.cartCleared());
+};
+
+async function applyCart(
+  request: () => ReturnType<typeof getCartApi>,
+  dispatch: Dispatch,
+) {
+  const version = clearVersion;
+  const response = await request();
+  if (version === clearVersion) dispatch(updateCart(response.data.data));
+  return response.data.data;
+}
+
+export const createAsyncGetCart = createAsyncThunk(
+  "cart/createAsyncGetCart", async (_, { dispatch, rejectWithValue }) => {
+    try { return await applyCart(getCartApi, dispatch); }
+    catch (error) { return rejectWithValue(extractErrorMessage(error)); }
   },
 );
 
 export const createAsyncAddCart = createAsyncThunk(
   "cart/createAsyncAddCart",
-  async (
-    { id, qty = 1 }: { id: string; qty?: number },
-    { dispatch, rejectWithValue },
-  ) => {
-    try {
-      await addCartApi({ product_id: id, qty });
-      dispatch(createAsyncGetCart());
-    } catch (error: unknown) {
-      console.error(extractErrorMessage(error));
-      return rejectWithValue(extractErrorMessage(error));
-    }
+  async ({ id, qty = 1 }: { id: string; qty?: number }, { dispatch, rejectWithValue }) => {
+    try { return await applyCart(() => addCartApi({ product_id: id, qty }), dispatch); }
+    catch (error) { return rejectWithValue(extractErrorMessage(error)); }
   },
 );
 
 export const createAsyncDeleteSingleCart = createAsyncThunk(
-  "cart/createAsyncDeleteSingleCart",
-  async (id: string, { dispatch, rejectWithValue }) => {
-    try {
-      await deleteSingleCartApi(id);
-      dispatch(createAsyncGetCart());
-    } catch (error: unknown) {
-      console.error(extractErrorMessage(error));
-      return rejectWithValue(extractErrorMessage(error));
-    }
+  "cart/createAsyncDeleteSingleCart", async (id: string, { dispatch, rejectWithValue }) => {
+    try { return await applyCart(() => deleteSingleCartApi(id), dispatch); }
+    catch (error) { return rejectWithValue(extractErrorMessage(error)); }
   },
 );
 
 export const createAsyncDeleteAllCart = createAsyncThunk(
-  "cart/createAsyncDeleteAllCart",
-  async (_, { dispatch, rejectWithValue }) => {
+  "cart/createAsyncDeleteAllCart", async (_, { dispatch, rejectWithValue }) => {
     try {
       const response = await deleteAllCartApi();
-      dispatch(createAsyncGetCart());
+      clearVersion += 1;
+      dispatch(cartSlice.actions.cartCleared());
       return response.data;
-    } catch (error: unknown) {
-      console.error(extractErrorMessage(error));
-      return rejectWithValue(extractErrorMessage(error));
-    }
+    } catch (error) { return rejectWithValue(extractErrorMessage(error)); }
   },
 );
 
 export const createAsyncUpdateCart = createAsyncThunk(
   "cart/createAsyncUpdateCart",
-  async (
-    { id, product_id, qty }: { id: string; product_id: string; qty: number },
-    { dispatch, rejectWithValue },
-  ) => {
-    try {
-      await updateCartApi(id, { product_id, qty });
-      dispatch(createAsyncGetCart());
-    } catch (error: unknown) {
-      console.error(extractErrorMessage(error));
-      return rejectWithValue(extractErrorMessage(error));
-    }
+  async ({ id, product_id, qty }: { id: string; product_id: string; qty: number }, { dispatch, rejectWithValue }) => {
+    try { return await applyCart(() => updateCartApi(id, { product_id, qty }), dispatch); }
+    catch (error) { return rejectWithValue(extractErrorMessage(error)); }
   },
 );
 
-export const { updateCart, clearCart } = cartSlice.actions;
+export const { updateCart } = cartSlice.actions;
 export default cartSlice.reducer;

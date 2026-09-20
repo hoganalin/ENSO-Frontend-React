@@ -166,18 +166,17 @@ export async function verifyCheckMacValue(
 const MERCHANT_TRADE_NO_PATTERN = /^\w{4,20}$/;
 
 /**
- * order_no（`ENSO-XXXXXXXX`）→ MerchantTradeNo（`ENSO_XXXXXXXX`）。
+ * order_no（`ENSO-XXXXXXXX`）→ MerchantTradeNo（`ENSOXXXXXXXX`）。
  *
- * 為什麼不直接用 order_no：綠界限定 `^\w{4,20}$`，`-` 不合法。
- * 為什麼選 `_` 而不是刪掉：`_` 合法且一對一可逆，回調時能直接反解回 order_no。
+ * 綠界實際要求只允許英文字母與數字；連字號與底線都會被拒絕。
  *
  * attempt > 1 時加 `_<n>` 後綴：綠界的 MerchantTradeNo 在同一商店必須唯一，
  * 使用者第一次付款失敗要重新付時，沿用同一組編號會被退件。
  */
 export function toMerchantTradeNo(orderNo: string, attempt = 1): string {
-  const base = orderNo.replace(/-/g, "_");
-  const candidate = attempt > 1 ? `${base}_${attempt}` : base;
-  if (!MERCHANT_TRADE_NO_PATTERN.test(candidate)) {
+  const base = orderNo.replace(/[^A-Za-z0-9]/g, "");
+  const candidate = attempt > 1 ? `${base}${attempt}` : base;
+  if (!/^[A-Za-z0-9]{4,20}$/.test(candidate)) {
     throw new Error(
       `[ecpay] MerchantTradeNo 不合法（需符合 ^\\w{4,20}$）：${candidate}`,
     );
@@ -192,8 +191,7 @@ export function toMerchantTradeNo(orderNo: string, attempt = 1): string {
  * 這個函式只是回調找不到交易紀錄時的救援路徑。
  */
 export function orderNoFromMerchantTradeNo(merchantTradeNo: string): string {
-  const withoutAttempt = merchantTradeNo.replace(/_\d+$/, "");
-  return withoutAttempt.replace(/_/, "-");
+  return merchantTradeNo;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -254,6 +252,17 @@ export interface BuildCheckoutParams {
   /** 寫進 CustomField1，回調時會原樣帶回，方便對帳 */
   customField1?: string;
   now?: Date;
+  /** 電子發票參數（InvoiceMark=Y）。傳入時隨 AIO 金流自動開票。 */
+  invoice?: {
+    /** 購買人名稱（≤20字）*/
+    customerName: string;
+    /** 購買人 Email（≤100字）*/
+    customerEmail: string;
+    /** 購買人地址（≤200字，選填）*/
+    customerAddr?: string;
+    /** 購買人電話（≤20字，選填）*/
+    customerPhone?: string;
+  };
 }
 
 /**
@@ -301,6 +310,19 @@ export async function buildAioCheckoutFields(
 
   if (params.orderResultUrl) fields.OrderResultURL = params.orderResultUrl;
   if (params.clientBackUrl) fields.ClientBackURL = params.clientBackUrl;
+  if (params.invoice) {
+    fields.InvoiceMark = "Y";
+    fields.CustomerName = sanitizeText(params.invoice.customerName || "消費者", 20);
+    fields.CustomerEmail = (params.invoice.customerEmail || "").slice(0, 100);
+    fields.CustomerAddr = (params.invoice.customerAddr ?? "").slice(0, 200);
+    fields.CustomerPhone = (params.invoice.customerPhone ?? "").slice(0, 20);
+    fields.TaxType = "1";   // 應稅
+    fields.Print = "1";     // 列印（不需要 CarrierNum 即可通過驗證）
+    fields.Donation = "0";  // 不捐贈
+    fields.CarrierType = "";
+    fields.CarrierNum = "";
+    fields.LoveCode = "";
+  }
   if (params.customField1) fields.CustomField1 = sanitizeText(params.customField1, 50);
 
   fields.CheckMacValue = await generateCheckMacValue(fields, config);

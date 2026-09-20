@@ -1,14 +1,27 @@
-import { Link, Navigate, useParams } from "react-router";
+import { Link, useParams } from "react-router";
+import { useEffect, useState } from "react";
 
-import { JOURNAL } from "@/data/journal";
+import { JOURNAL, type JournalArticle } from "@/data/journal";
 import { Seal } from "@/components/atoms";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { getPublishedJournal } from "@/services/db/journal";
 
 export default function JournalArticlePage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
-  const article = JOURNAL.find((a) => a.id === id);
+  const [loaded,setLoaded]=useState<{id:string|undefined;article:JournalArticle|null}>({id:undefined,article:null});
+  const [error,setError]=useState(false);
+  const [attempt,setAttempt]=useState(0);
+  const article=loaded.id===id ? loaded.article : null;
+  useEffect(()=>{
+    let active=true;setError(false);
+    getPublishedJournal(id??'').then(result=>{if(active)setLoaded({id,article:result});})
+      .catch(()=>{if(active){setError(true);setLoaded({id,article:null});}});
+    return ()=>{active=false;};
+  },[id,attempt]);
   usePageTitle(article ? `${article.title} · 香誌` : null);
-  if (!article) return <Navigate to="/404" replace />;
+  if (error) return <div className="enso-journal" role="alert">文章讀取失敗。<button onClick={()=>setAttempt(n=>n+1)}>重試</button><Link to="/journal">返回香誌</Link></div>;
+  if (loaded.id!==id) return <p role="status">正在讀取文章…</p>;
+  if (!article) return <div className="enso-journal"><h1>文章尚未發布或已下架</h1><Link to="/journal">返回香誌</Link></div>;
 
   const related = JOURNAL.filter((a) => a.id !== article.id).slice(0, 3);
 

@@ -6,7 +6,7 @@ import axios from "axios";
 
 import Pagination from "./Pagination";
 import useMessage from "../hooks/useMessage";
-import { getProductApi } from "../services/product";
+import { getProductApi, getAllProductsApi } from "../services/product";
 import { createAsyncAddCart } from "../slice/cartSlice";
 import { currency } from "../assets/utils/filter";
 
@@ -78,7 +78,7 @@ const Products = (): JSX.Element => {
 
   const getAllCategories = useCallback(async () => {
     try {
-      const response = await getProductApi(1, "all");
+      const response = await getAllProductsApi();
       const result = [
         "all",
         ...new Set(

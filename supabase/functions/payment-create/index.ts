@@ -72,7 +72,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // ── 3. 讀訂單（service_role 繞過 RLS，所以下面必須自己檢查歸屬）──
     const { data: orderData, error: orderError } = await admin
       .from("orders")
-      .select("id, order_no, buyer_id, status, subtotal, discount, shipping_fee, total")
+      .select("id, order_no, buyer_id, status, subtotal, discount, shipping_fee, total, checkout_source, recipient")
       .eq("id", orderId)
       .maybeSingle();
     if (orderError) throw new Error(orderError.message);
@@ -88,12 +88,19 @@ Deno.serve(async (req: Request): Promise<Response> => {
       discount: number;
       shipping_fee: number;
       total: number;
+      checkout_source: string | null;
+      recipient: Record<string, string> | null;
     };
 
     // ⚠️ RLS 在 service_role 下是關掉的，這行就是唯一的授權檢查。
     if (order.buyer_id !== userId) {
       // 回 404 而不是 403：不要讓人拿這支 API 去枚舉別人的訂單是否存在。
       return errorResponse(req, 404, "order_not_found", "找不到這筆訂單");
+    }
+    // Migration 007 makes the quote immutable to browser clients. Legacy
+    // browser-created orders must never be signed, even if arithmetic matches.
+    if (order.checkout_source !== "server-v1") {
+      return errorResponse(req, 409, "legacy_order", "此訂單尚未經伺服器驗價，請重新下單");
     }
     if (order.status !== "pending") {
       return errorResponse(
@@ -153,20 +160,22 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // 4b. 算術恆等式：total = max(0, subtotal - discount) + shipping_fee
     //     （對齊 domain/promotions.ts:185；subtotal 是「未扣折扣」的商品合計）
     const grossSubtotal = items.reduce((sum, i) => sum + i.unit_price * i.qty, 0);
-    const expectedTotal = Math.max(0, order.subtotal - order.discount) + order.shipping_fee;
+    // orders.subtotal は「折扣後商品總額」：grossSubtotal - discount
+    const expectedSubtotal = grossSubtotal - order.discount;
+    const expectedTotal = expectedSubtotal + order.shipping_fee;
     const shippingOk = order.shipping_fee === 0 || order.shipping_fee === SHIPPING_BASE;
     const consistent =
-      grossSubtotal === order.subtotal &&
+      expectedSubtotal === order.subtotal &&
       expectedTotal === order.total &&
       order.discount >= 0 &&
-      order.discount <= order.subtotal &&
+      order.discount <= grossSubtotal &&
       shippingOk;
 
     if (!consistent) {
       console.error(
         `[payment-create] 訂單金額不一致 order=${order.order_no} ` +
-          `items=${grossSubtotal} subtotal=${order.subtotal} discount=${order.discount} ` +
-          `shipping=${order.shipping_fee} total=${order.total} expected=${expectedTotal}`,
+          `items=${grossSubtotal} subtotal=${order.subtotal}(折後) discount=${order.discount} ` +
+          `expectedSubtotal=${expectedSubtotal} shipping=${order.shipping_fee} total=${order.total} expected=${expectedTotal}`,
       );
       return errorResponse(
         req,
@@ -176,12 +185,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // ⚠️ 殘留風險（無法在這一層完全解決）：
-    // discount 是前端套用活動引擎算出來後寫進 DB 的，這裡只能檢查
-    // 「0 ≤ discount ≤ subtotal」與算術一致性，不能重算折扣本身
-    // （要重算就得把 domain/promotions.ts 整套移植成 Deno 版）。
-    // 真正的根治是讓訂單由伺服器建立，或加上 DB 端的金額檢查。
-    // 詳見 supabase/functions/README.md「還沒補的洞」。
+    // checkout-create calculated this discount with the shared engine using
+    // server data. Migration 007 rejects client changes to quote/items/status.
 
     const amount = order.total;
     if (!Number.isInteger(amount) || amount < 1) {
@@ -208,7 +213,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
     if (latest?.status === "paid") {
       // 已經付過了（回調可能還沒跑完）。不要再開新的付款。
       return errorResponse(req, 409, "already_paid", "這筆訂單已完成付款");
-    } else if (latest && latest.status === "pending" && latest.amount === amount) {
+    } else if (
+      latest &&
+      latest.status === "pending" &&
+      latest.amount === amount &&
+      /^[A-Za-z0-9]{4,20}$/.test(latest.merchant_trade_no)
+    ) {
       merchantTradeNo = latest.merchant_trade_no;
     } else {
       const attempt = (latest?.attempt ?? 0) + 1;
@@ -240,10 +250,18 @@ Deno.serve(async (req: Request): Promise<Response> => {
         returnUrl: resolveReturnUrl(),
         // 這兩個都是選填：沒設定就讓綠界顯示它自己的結果頁，
         // 免得把使用者導到一個還不存在的前端路由。
-        orderResultUrl: Deno.env.get("ECPAY_ORDER_RESULT_URL") || undefined,
+        orderResultUrl: siteUrl ? `${Deno.env.get("SUPABASE_URL")}/functions/v1/payment-result` : undefined,
         clientBackUrl: siteUrl ? `${siteUrl}/orders` : undefined,
         choosePayment: "ALL",
         customField1: order.order_no,
+        invoice: order.recipient
+          ? {
+              customerName: order.recipient["name"] ?? "",
+              customerEmail: order.recipient["email"] ?? "",
+              customerAddr: order.recipient["address"] ?? "",
+              customerPhone: order.recipient["tel"] ?? "",
+            }
+          : undefined,
       },
       config,
     );

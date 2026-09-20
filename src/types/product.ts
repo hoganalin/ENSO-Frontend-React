@@ -1,4 +1,7 @@
 export interface Product {
+  vip_only?: boolean;
+  available_at?: string | null;
+  vip_available_at?: string | null;
   id: string;
   title: string;
   category: string;

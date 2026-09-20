@@ -12,6 +12,7 @@ import { createAsyncGetCart } from "../slice/cartSlice";
 const NAV_ITEMS = [
   { href: "/", label: "本店", sub: "ほんてん", kanji: "本" },
   { href: "/product", label: "線香", sub: "せんこう", kanji: "香" },
+  { href: "/offers", label: "活動", sub: "お知らせ", kanji: "禮" },
   { href: "/journal", label: "香誌", sub: "こうし", kanji: "誌" },
   { href: "/stores", label: "店舖", sub: "てんぽ", kanji: "店" },
   { href: "/about", label: "品牌", sub: "ぶらんど", kanji: "縁" },
@@ -154,6 +155,10 @@ function Header(): JSX.Element {
               </form>
             </details>
 
+            {isLoggedIn && <Link to="/member" className="enso-header__icon-btn" aria-label="會員中心"
+              onClick={() => setNavLoadingLabel("前往會員中心…")}>
+              <i className="bi bi-person-circle" /><span className="label">會員</span>
+            </Link>}
             {isLoggedIn ? (
               <button
                 type="button"

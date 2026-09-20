@@ -37,20 +37,23 @@ const Register = (): JSX.Element => {
   const onSubmit: SubmitHandler<RegisterFormData> = async (data) => {
     setLoading(true);
     try {
-      await signUp({
+      const result = await signUp({
         email: data.email,
         password: data.password,
         name: data.username,
         // 帶推薦碼 → DB 觸發器自動綁定推薦人（單層、永久固定）
         referrerCode: data.referrerCode?.trim() || undefined,
       });
+      const needsEmailConfirmation = Boolean(result.user && !result.session);
       Swal.fire({
         toast: true,
         position: "top-end",
-        icon: "success",
-        title: "註冊成功！歡迎加入 ENSO。",
+        icon: needsEmailConfirmation ? "info" : "success",
+        title: needsEmailConfirmation
+          ? "註冊成功，請先到信箱完成驗證。"
+          : "註冊成功！歡迎加入 ENSO。",
         showConfirmButton: false,
-        timer: 2000,
+        timer: needsEmailConfirmation ? 4000 : 2000,
         timerProgressBar: true,
       });
       navigate("/login");

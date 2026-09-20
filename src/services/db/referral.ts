@@ -35,8 +35,8 @@ export interface ReferralReport {
 }
 
 /**
- * 金／銀卡的「我的推薦」報表：名下被推薦人 + 註冊日 + 完成訂單明細 + 消費總額。
- * （RLS 已限制只有金銀卡本人／staff 讀得到這些訂單。）
+ * 推薦夥伴／金銀卡的「我的推薦」報表；資料可見性由 RLS 管理。
+ * 只計訂單的推薦人快照等於本人且已付款的訂單，避免改歸戶後誤算。
  */
 export async function getReferralReport(referrerId: string): Promise<ReferralReport> {
   const { data: profiles, error } = await supabase
@@ -55,7 +55,8 @@ export async function getReferralReport(referrerId: string): Promise<ReferralRep
       .from("orders")
       .select("*")
       .in("buyer_id", ids)
-      .eq("status", "completed");
+      .eq("referrer_id", referrerId)
+      .in("status", ["paid", "shipped", "completed"]);
     if (ordError) throw new Error(ordError.message);
     orders = (ord ?? []) as OrderRow[];
   }

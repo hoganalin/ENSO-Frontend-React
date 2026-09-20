@@ -11,7 +11,13 @@ import StoresPage from "@/pages/StoresPage";
 import CartPage from "@/pages/CartPage";
 import CheckoutPage from "@/pages/CheckoutPage";
 import CheckoutSuccessPage from "@/pages/CheckoutSuccessPage";
-import PaymentMockPage from "@/pages/PaymentMockPage";
+import PaymentPage from "@/pages/PaymentPage";
+import DistributorPage from "@/pages/DistributorPage";
+import PartnerResourcesPage from "@/pages/PartnerResourcesPage";
+import MemberPage from "@/pages/MemberPage";
+import MemberOrdersPage from "@/pages/MemberOrdersPage";
+import FavoritesPage from "@/pages/FavoritesPage";
+import OffersPage from "@/pages/OffersPage";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import MyReferralPage from "@/pages/MyReferralPage";
@@ -37,7 +43,14 @@ export const router = createBrowserRouter([
       { path: "checkout", element: <CheckoutPage /> },
       { path: "checkout-success", element: <CheckoutSuccessPage /> },
       { path: "checkout-success/:orderId", element: <CheckoutSuccessPage /> },
-      { path: "payment/mock/:orderId", element: <PaymentMockPage /> },
+      { path: "payment/:orderId", element: <PaymentPage /> },
+      { path: "payment", element: <PaymentPage /> },
+      { path: "orders", element: <MemberOrdersPage /> },
+      { path: "member", element: <MemberPage /> },
+      { path: "distributor", element: <DistributorPage /> },
+      { path: "partner-resources", element: <PartnerResourcesPage /> },
+      { path: "favorites", element: <FavoritesPage /> },
+      { path: "offers", element: <OffersPage /> },
       { path: "login", element: <LoginPage /> },
       { path: "register", element: <RegisterPage /> },
       { path: "referral", element: <MyReferralPage /> },
@@ -51,3 +64,4 @@ export const router = createBrowserRouter([
 ]);
 
 export default router;
+

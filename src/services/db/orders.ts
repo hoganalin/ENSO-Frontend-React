@@ -1,7 +1,7 @@
 // src/services/db/orders.ts — 建立訂單 / 查詢 / 狀態變更
 import { supabase } from "@/lib/supabase";
 
-import type { OrderRow } from "./types";
+import type { OrderItemRow, OrderRow } from "./types";
 
 export interface NewOrderItem {
   productId: string;
@@ -68,6 +68,24 @@ export async function listMyOrders(buyerId: string): Promise<OrderRow[]> {
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
   return (data ?? []) as OrderRow[];
+}
+
+export async function listOrderItems(orderId: string): Promise<OrderItemRow[]> {
+  const { data, error } = await supabase
+    .from("order_items")
+    .select("*, products(image_url)")
+    .eq("order_id", orderId)
+    .order("id");
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((item) => ({
+    ...(item as OrderItemRow),
+    image_url: (item as { products?: { image_url?: string | null } | null }).products?.image_url ?? null,
+  })) as OrderItemRow[];
+}
+
+export async function requestFullRefund(orderId: string, amount: number, reason: string): Promise<void> {
+  const { error } = await supabase.rpc("request_refund", { p_order: orderId, p_amount: amount, p_reason: reason.trim() });
+  if (error) throw new Error("退款申請未成功，請確認訂單狀態後重試。");
 }
 
 /** 標記訂單完成（發放購物金的觸發點；發放邏輯見 db/storeCredit.ts）。 */

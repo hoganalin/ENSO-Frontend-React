@@ -8,6 +8,7 @@ import { getSingleProductApi } from "../services/product";
 import { createAsyncAddCart } from "../slice/cartSlice";
 import { currency } from "../assets/utils/filter";
 import { KanjiDivider } from "./atoms";
+import FavoriteButton from "./FavoriteButton";
 
 import type { AppDispatch } from "../store/store";
 import type { Product } from "../types/product";
@@ -89,6 +90,9 @@ function SingleProduct({ id }: SingleProductProps): JSX.Element {
         <div className="enso-detail__info" data-aos="fade-left" data-aos-delay={100}>
           <div className="t-eyebrow">{product.category || "Incense"}</div>
           <h1 className="enso-detail__title">{product.title}</h1>
+          {product.vip_only && <p>VIP 金卡會員限定商品</p>}
+          {product.available_at && <p>一般開放購買：{new Date(product.available_at).toLocaleString("zh-TW")}</p>}
+          {product.vip_available_at && <p>VIP 金卡搶先購買：{new Date(product.vip_available_at).toLocaleString("zh-TW")}</p>}
           <p className="enso-detail__sub">
             {product.eng_title || "Premium Incense Series"}
           </p>
@@ -101,6 +105,7 @@ function SingleProduct({ id }: SingleProductProps): JSX.Element {
           </div>
 
           <p className="enso-detail__desc">{product.description}</p>
+          {product.id && <FavoriteButton productId={product.id} />}
 
           {/* Aroma profile */}
           <div className="enso-detail__aroma">

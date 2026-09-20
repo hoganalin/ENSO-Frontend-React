@@ -51,6 +51,7 @@ coverage/
 
 .vercel
 .env*.local
+supabase/.temp/
 
 # 本 session 的暫存／備份檔（可整個資料夾刪除）
 _to_delete/

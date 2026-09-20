@@ -111,3 +111,26 @@ vite.config.ts                   plugins: [react(), tailwindcss()]，alias `@` �
 | 新增 API 函式 | .claude/skills/project/API_SKILL.md |
 
 不確定要讀哪個時，讀取全部再決定。
+
+## Spec-Driven Development (Spectra / OpenSpec)
+
+This project uses [Spectra](https://spectra.5xcamp.us/) with the **OpenSpec** format. All living specs live in `openspec/` at the project root.
+
+- **Before implementing a feature**, read the relevant spec in `openspec/specs/`
+- **To propose a change**, create `openspec/changes/<name>/proposal.md` (copy `_template/proposal.md`)
+- **After implementing**, update the relevant spec and move the change folder to `openspec/archive/`
+- Open Spectra desktop app and point it at this project root to get the GUI overview
+
+### Spec coverage
+
+| Spec | File |
+|------|------|
+| Product catalog domain | `openspec/specs/domain/products.md` |
+| Cart domain | `openspec/specs/domain/cart.md` |
+| Order domain (frontend) | `openspec/specs/domain/orders.md` |
+| Member & Supabase auth | `openspec/specs/domain/members.md` |
+| checkout-create API contract | `openspec/specs/api/checkout-create.md` |
+| payment-create API contract | `openspec/specs/api/payment-create.md` |
+| payment-notify webhook | `openspec/specs/api/payment-notify.md` |
+| Checkout UX flow | `openspec/specs/features/checkout-flow.md` |
+| Member auth UX flow | `openspec/specs/features/member-auth.md` |

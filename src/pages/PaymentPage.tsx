@@ -1,126 +1,96 @@
-// src/pages/PaymentPage.tsx — ECPay 支付頁面
-
-import { useEffect, useState } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { handlePaymentSuccess } from "@/services/payment";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useParams } from "react-router";
+import { requireAuth } from "@/lib/supabase-auth";
+import { listMyOrders, listOrderItems } from "@/services/db/orders";
+import type { OrderItemRow, OrderRow } from "@/services/db/types";
+import { startEcpayPayment } from "@/services/payment/client";
+import OrderGifts from "@/components/OrderGifts";
+import RefundRequest from "@/components/RefundRequest";
 import styles from "@/styles/Payment.module.css";
 
-interface PaymentResult {
-  success: boolean;
-  message: string;
-  orderId?: string;
-  creditIssued?: number;
-  error?: string;
-}
+const labels: Record<string, string> = { pending: "待付款", paid: "已付款", shipped: "已出貨", completed: "已完成", cancelled: "已取消", refunded: "已退款" };
 
 export default function PaymentPage() {
   const { orderId } = useParams<{ orderId: string }>();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [result, setResult] = useState<PaymentResult | null>(null);
+  const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [items, setItems] = useState<OrderItemRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [paying, setPaying] = useState(false);
+  const busy = useRef(false);
+  const mounted = useRef(true);
+  const requestId = useRef(0);
+  const refresh = useCallback(async () => {
+    const currentRequest = ++requestId.current;
+    setLoading(true);
+    setError(null);
+    try {
+      const buyerId = await requireAuth();
+      const rows = await listMyOrders(buyerId);
+      const selected = rows.find((row) => row.id === orderId);
+      const selectedItems = selected ? await listOrderItems(selected.id) : [];
+      if (mounted.current && currentRequest === requestId.current) { setOrders(rows); setItems(selectedItems); }
+    } catch (err) {
+      if (mounted.current && currentRequest === requestId.current) { setOrders([]); setItems([]); setError(err instanceof Error ? err.message : "無法讀取訂單，請稍後再試"); }
+    } finally { if (mounted.current && currentRequest === requestId.current) setLoading(false); }
+  }, [orderId]);
+  useEffect(() => { mounted.current = true; void refresh(); return () => { mounted.current = false; requestId.current++; }; }, [refresh]);
 
-  useEffect(() => {
-    // 處理支付回調
-    const handleCallback = async () => {
-      if (!orderId) {
-        setResult({
-          success: false,
-          message: "訂單 ID 遺失",
-          error: "無效的訂單",
-        });
-        setLoading(false);
-        return;
-      }
+  const order = orders.find((row) => row.id === orderId);
+  const pay = async () => {
+    if (!order || order.status !== "pending" || busy.current) return;
+    busy.current = true;
+    setPaying(true);
+    setError(null);
+    try {
+      // Only the trusted payment service may decide whether this order can be paid.
+      await startEcpayPayment(order.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "無法開始付款，請稍後再試");
+      busy.current = false;
+      setPaying(false);
+    }
+  };
 
-      // 從 URL 查詢參數中提取 ECPay 回調數據
-      const params = new URLSearchParams(location.search);
-      const data: Record<string, string> = {};
-
-      params.forEach((value, key) => {
-        data[key] = value;
-      });
-
-      // 若有 ECPay 回調數據，驗證並完成訂單
-      if (Object.keys(data).length > 0 && data.TradeNo) {
-        try {
-          const paymentResult = await handlePaymentSuccess(data);
-          setResult(paymentResult);
-
-          // 延遲 2 秒後導向成功頁面
-          if (paymentResult.success) {
-            setTimeout(() => {
-              navigate(`/checkout-success/${orderId}`, {
-                state: {
-                  creditIssued: paymentResult.creditIssued,
-                  transactionId: paymentResult.transactionId,
-                },
-              });
-            }, 2000);
-          }
-        } catch (error) {
-          setResult({
-            success: false,
-            message: "支付處理失敗",
-            error: error instanceof Error ? error.message : "未知錯誤",
-            orderId,
-          });
-        }
-      } else {
-        // 尚未返回支付結果，顯示等待畫面
-        setResult({
-          success: false,
-          message: "等待支付結果...",
-        });
-      }
-
-      setLoading(false);
-    };
-
-    handleCallback();
-  }, [orderId, location.search, navigate]);
-
-  return (
-    <div className={styles.paymentContainer}>
-      <div className={styles.paymentCard}>
-        {loading ? (
-          <>
-            <div className={styles.spinner}></div>
-            <h2>處理支付中...</h2>
-            <p>請稍候，我們正在驗證您的支付資訊</p>
-          </>
-        ) : result?.success ? (
-          <>
-            <div className={styles.successIcon}>✓</div>
-            <h2>支付成功！</h2>
-            <p>{result.message}</p>
-            {result.creditIssued && result.creditIssued > 0 && (
-              <div className={styles.creditNotice}>
-                <p>
-                  🎁 您獲得推薦購物金:{" "}
-                  <strong>NT${result.creditIssued.toLocaleString()}</strong>
-                </p>
-              </div>
-            )}
-            <p className={styles.redirectText}>3 秒後導向確認頁面...</p>
-          </>
-        ) : (
-          <>
-            <div className={styles.errorIcon}>✕</div>
-            <h2>支付失敗</h2>
-            <p>{result?.message || "支付處理出錯"}</p>
-            {result?.error && <p className={styles.errorDetails}>{result.error}</p>}
-            <div className={styles.actions}>
-              <button onClick={() => navigate(`/order/${orderId}`)} className={styles.primaryBtn}>
-                檢查訂單
-              </button>
-              <button onClick={() => navigate("/cart")} className={styles.secondaryBtn}>
-                返回購物車
-              </button>
-            </div>
-          </>
-        )}
+  return <main className={styles.paymentContainer}>
+    <section className={styles.paymentCard} aria-busy={loading || paying}>
+      <h1>{orderId ? "訂單付款" : "我的訂單"}</h1>
+      {loading ? <p role="status">正在讀取訂單…</p> : <>
+        {orderId && !order && !error && <p role="alert">找不到可存取的訂單，請確認登入帳號及訂單網址。</p>}
+        {order && <>
+          <p>訂單編號：{order.order_no}</p>
+          <p>訂單金額：NT${order.total.toLocaleString()}</p>
+          <p role="status">訂單狀態：{labels[order.status] ?? order.status}</p>
+          {items.length > 0 && <section aria-label="訂單商品" className={styles.orderItems}>
+            <h2>本次購買商品</h2>
+            <ul>{items.map((item) => <li key={item.id}>
+              <span className={styles.itemInfo}>
+                {item.image_url && <img className={styles.itemImage} src={item.image_url} alt="" />}
+                <span>{item.title} × {item.qty}</span>
+              </span>
+              <span>NT${(item.unit_price * item.qty).toLocaleString()}</span>
+            </li>)}</ul>
+          </section>}
+          {order.status === "pending" ? <>
+            <p>付款由綠界處理。若您剛完成付款，請先更新訂單狀態；付款確認可能需要片刻。</p>
+            <button className={styles.primaryBtn} disabled={paying} onClick={pay}>{paying ? "正在前往綠界…" : "前往綠界付款"}</button>
+          </> : <p>{["paid", "shipped", "completed"].includes(order.status) ? "此訂單已完成付款，無需再次支付。" : "此訂單無法付款。"}</p>}
+          <OrderGifts key={`gifts-${order.id}`} orderId={order.id} />
+          <RefundRequest key={order.id} orderId={order.id} total={order.total} eligible={["paid", "shipped", "completed"].includes(order.status)} />
+        </>}
+        {!orderId && !error && (orders.length ? <ul className={styles.orderList}>{orders.map((row) => <li key={row.id}>
+          <Link to={`/payment/${row.id}`}>{row.order_no}</Link>
+          <span>{labels[row.status] ?? row.status} · NT${row.total.toLocaleString()}</span>
+        </li>)}</ul> : <p>目前沒有訂單。</p>)}
+        {error && <p className={styles.errorDetails} role="alert">{error}</p>}
+      </>}
+      <div className={styles.actions}>
+        <button className={styles.secondaryBtn} disabled={loading || paying} onClick={() => void refresh()}>更新訂單狀態</button>
+        {orderId && <Link className={styles.secondaryBtn} to="/orders">我的訂單</Link>}
+        <Link className={styles.secondaryBtn} to="/product">繼續購物</Link>
       </div>
-    </div>
-  );
+    </section>
+  </main>;
 }
+
+

@@ -9,6 +9,8 @@ export interface SmsRow {
   related_order_id: string | null;
   status: string;
   created_at: string;
+  mitake_msgid?: string | null;
+  error_message?: string | null;
 }
 
 /** 最近的簡訊紀錄（staff／管理者可看）。 */

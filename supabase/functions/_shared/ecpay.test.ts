@@ -154,12 +154,12 @@ Deno.test("驗簽：自己簽的過、被竄改的不過", async () => {
 });
 
 Deno.test("MerchantTradeNo：order_no 轉換可逆且符合 ^\\w{4,20}$", () => {
-  assertEquals(toMerchantTradeNo("ENSO-9F3A2B1C"), "ENSO_9F3A2B1C");
-  assertEquals(toMerchantTradeNo("ENSO-9F3A2B1C", 2), "ENSO_9F3A2B1C_2");
-  assertEquals(orderNoFromMerchantTradeNo("ENSO_9F3A2B1C"), "ENSO-9F3A2B1C");
-  assertEquals(orderNoFromMerchantTradeNo("ENSO_9F3A2B1C_3"), "ENSO-9F3A2B1C");
+  assertEquals(toMerchantTradeNo("ENSO-9F3A2B1C"), "ENSO9F3A2B1C");
+  assertEquals(toMerchantTradeNo("ENSO-9F3A2B1C", 2), "ENSO9F3A2B1C2");
+  assertEquals(orderNoFromMerchantTradeNo("ENSO9F3A2B1C"), "ENSO9F3A2B1C");
+  assertEquals(orderNoFromMerchantTradeNo("ENSO9F3A2B1C3"), "ENSO9F3A2B1C3");
 
-  for (const n of ["ENSO_9F3A2B1C", toMerchantTradeNo("ENSO-9F3A2B1C", 9)]) {
+  for (const n of ["ENSO9F3A2B1C", toMerchantTradeNo("ENSO-9F3A2B1C", 9)]) {
     assert(/^\w{4,20}$/.test(n), `${n} 不符合綠界格式`);
   }
 

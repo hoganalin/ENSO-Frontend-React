@@ -31,10 +31,17 @@ export interface ProfileRow {
   member_tier: MemberTier;
   referrer_id: string | null;
   referral_code: string | null;
+  distributor_discount_rate: number;
+  subscription_active: boolean;
+  subscription_started_at: string | null;
+  subscription_expires_at: string | null;
   created_at: string;
 }
 
 export interface ProductRow {
+  vip_only?: boolean;
+  available_at?: string | null;
+  vip_available_at?: string | null;
   id: string;
   title: string;
   category: string | null;
@@ -77,6 +84,7 @@ export interface OrderItemRow {
   title: string;
   unit_price: number;
   qty: number;
+  image_url?: string | null;
 }
 
 export interface CreditRow {
@@ -90,6 +98,7 @@ export interface CreditRow {
 }
 
 export interface PromotionRow {
+  vip_starts_at?: string | null;
   id: string;
   code: string | null;
   name: string;

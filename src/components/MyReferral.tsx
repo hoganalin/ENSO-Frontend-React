@@ -1,8 +1,9 @@
 // src/components/MyReferral.tsx
 // 「我的推薦」頁：
-//   • 金／銀卡 → 名下被推薦人名單、消費總額、可匯出 Excel
+//   • 推薦夥伴角色及金／銀卡 → 名下被推薦人名單、消費總額、可匯出 Excel
 //   • 普通會員 → 我的推薦碼、可用購物金、購物金明細
 import { useEffect, useState, type JSX } from "react";
+import { Link } from "react-router";
 
 import type { CreditTx } from "@/domain/storeCredit";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -57,9 +58,9 @@ export default function MyReferral(): JSX.Element {
           setLoading(false);
           return;
         }
-        if (p.member_tier === "gold" || p.member_tier === "silver") {
-          const r = await getReferralReport(p.id);
-          if (active) setReport(r);
+        if (p.role === "referral_partner" || p.member_tier === "gold" || p.member_tier === "silver") {
+          const [r, c] = await Promise.all([getReferralReport(p.id), getMyReferralCode(p.id)]);
+          if (active) { setReport(r); setCode(c); }
         } else {
           const [c, b, l] = await Promise.all([
             getMyReferralCode(p.id),
@@ -134,10 +135,11 @@ export default function MyReferral(): JSX.Element {
     );
   }
 
-  const isPartner = profile.member_tier === "gold" || profile.member_tier === "silver";
+  const isPartner = profile.role === "referral_partner" || profile.member_tier === "gold" || profile.member_tier === "silver";
 
   return (
     <div className="container py-5" style={{ maxWidth: 960 }}>
+      <Link to="/member">回會員中心</Link>
       <div className="d-flex align-items-center gap-3 mb-4">
         <h1 className="h3 m-0" style={{ letterSpacing: 2 }}>
           我的推薦
@@ -152,6 +154,7 @@ export default function MyReferral(): JSX.Element {
 
       {isPartner && report ? (
         <>
+          <p>我的推薦碼：<strong>{code ?? "尚未設定"}</strong> <button type="button" className="btn btn-outline-secondary" disabled={!code} onClick={handleCopy}>{copied ? "已複製" : "複製推薦碼"}</button></p>
           <div className="row g-3 mb-4">
             <div className="col-6 col-md-4">
               <div className="card h-100">
