@@ -26,6 +26,9 @@ import AdminSettingsPage from "@/pages/AdminSettingsPage";
 import AdminSmsLogPage from "@/pages/AdminSmsLogPage";
 import AdminProductsPage from "@/pages/AdminProductsPage";
 import AdminOrdersPage from "@/pages/AdminOrdersPage";
+import AdminMembersPage from "@/pages/AdminMembersPage";
+import AdminReferralsPage from "@/pages/AdminReferralsPage";
+import AdminPromotionsPage from "@/pages/AdminPromotionsPage";
 import FaqPage from "@/pages/FaqPage";
 import ContactPage from "@/pages/ContactPage";
 import NotFoundPage from "@/pages/NotFoundPage";
@@ -60,6 +63,9 @@ export const router = createBrowserRouter([
       { path: "admin", element: <AdminHomePage /> },
       { path: "admin/products", element: <AdminProductsPage /> },
       { path: "admin/orders", element: <AdminOrdersPage /> },
+      { path: "admin/members", element: <AdminMembersPage /> },
+      { path: "admin/referrals", element: <AdminReferralsPage /> },
+      { path: "admin/promotions", element: <AdminPromotionsPage /> },
       { path: "admin/settings", element: <AdminSettingsPage /> },
       { path: "admin/sms", element: <AdminSmsLogPage /> },
       { path: "faq", element: <FaqPage /> },

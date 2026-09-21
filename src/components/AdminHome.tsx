@@ -33,6 +33,27 @@ const MENU_ITEMS: MenuItem[] = [
     roles: ["admin", "support", "warehouse"],
   },
   {
+    title: "會員管理",
+    desc: "查看及調整會員等級與角色",
+    path: "/admin/members",
+    icon: "👥",
+    roles: ["admin"],
+  },
+  {
+    title: "推薦人報表",
+    desc: "查看推薦夥伴的被推薦人數及消費",
+    path: "/admin/referrals",
+    icon: "🔗",
+    roles: ["admin"],
+  },
+  {
+    title: "優惠活動",
+    desc: "管理折扣碼及各類優惠活動",
+    path: "/admin/promotions",
+    icon: "🎁",
+    roles: ["admin", "marketing"],
+  },
+  {
     title: "系統設定",
     desc: "購物金比例等全站設定",
     path: "/admin/settings",
