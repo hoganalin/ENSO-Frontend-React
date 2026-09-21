@@ -37,6 +37,8 @@ const Checkout = (): JSX.Element => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewAttempt, setPreviewAttempt] = useState(0);
+  const [creditBalance, setCreditBalance] = useState(0);
+  const [useCreditChecked, setUseCreditChecked] = useState(false);
 
   const memberTier = (auth.user?.member_tier ?? "normal") as MemberTier;
   // 與購物車共用同一支 hook，確保兩頁算出的折扣一致
@@ -86,6 +88,20 @@ const Checkout = (): JSX.Element => {
     checkAuth();
   }, [navigate]);
 
+  // 取得購物金餘額
+  useEffect(() => {
+    const userId = auth.user?.id;
+    if (!userId) return;
+    let cancelled = false;
+    db.storeCredit
+      .getBalance(userId)
+      .then((bal) => { if (!cancelled) setCreditBalance(bal); })
+      .catch((err: unknown) => {
+        console.warn("[storeCredit] 無法讀取購物金餘額:", err);
+      });
+    return () => { cancelled = true; };
+  }, [auth.user?.id]);
+
   // 用活動引擎試算訂單金額（與 placeOrder 同一條計算路徑）
   useEffect(() => {
     if (created.current || !cartReady) return;
@@ -127,6 +143,12 @@ const Checkout = (): JSX.Element => {
     };
   }, [items, memberContext, couponCode, cartItems.length, navigate, previewAttempt, cartReady]);
 
+  // 購物金折抵金額（最多折抵至 $0，不能為負）
+  const creditUsed = useMemo(
+    () => (useCreditChecked && totals ? Math.min(creditBalance, totals.total) : 0),
+    [useCreditChecked, creditBalance, totals],
+  );
+
   const handleCheckout = useCallback(async (recipient: Recipient) => {
     if (!totals || submitting.current) return;
     submitting.current = true;
@@ -147,6 +169,8 @@ const Checkout = (): JSX.Element => {
         recipient,
         // 此情境僅供預覽相容；伺服器會重新讀取真實會員資料。
         memberContext: memberContext ?? undefined,
+        // TODO: 將 creditAmount 傳給 edge function（checkout-create）由伺服器端扣除，
+        //       可避免競態條件，需改 placeOrder() 介面與 Supabase function 的參數接收。
       });
 
       if (!order?.id) {
@@ -156,6 +180,15 @@ const Checkout = (): JSX.Element => {
       created.current = true;
       dispatch(clearCart());
       dispatch(clearCouponCode());
+
+      // 購物金折抵（client-side）；若 spendCredit 失敗僅警告，不阻擋訂單流程
+      if (useCreditChecked && creditUsed > 0) {
+        try {
+          await db.storeCredit.spendCredit(userId, creditUsed, Date.now());
+        } catch (creditErr: unknown) {
+          console.warn("[storeCredit] 扣除購物金失敗，訂單仍成立:", creditErr);
+        }
+      }
 
       await Swal.fire({
         icon: "success",
@@ -181,7 +214,7 @@ const Checkout = (): JSX.Element => {
       submitting.current = false;
       setLoading(false);
     }
-  }, [totals, items, memberTier, memberContext, couponCode, dispatch, navigate]);
+  }, [totals, items, memberTier, memberContext, couponCode, useCreditChecked, creditUsed, dispatch, navigate]);
 
   if (authError) {
     return (
@@ -247,10 +280,36 @@ const Checkout = (): JSX.Element => {
             </div>
           )}
 
+          {/* 購物金折抵區塊：有餘額才顯示 */}
+          {creditBalance > 0 && (
+            <div className="order-store-credit">
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={useCreditChecked}
+                  onChange={(e) => setUseCreditChecked(e.target.checked)}
+                />
+                <span>使用購物金折抵（可用：NT${currency(creditBalance)}）</span>
+              </label>
+              {useCreditChecked && (
+                <div className="order-discount" style={{ marginTop: "0.25rem" }}>
+                  <span>購物金折抵：</span>
+                  <span>−NT${currency(creditUsed)}</span>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="total">
             <strong>合計：</strong>
-            <strong>NT${currency(totals.total)}</strong>
+            <strong>NT${currency(totals.total - creditUsed)}</strong>
           </div>
+
+          {useCreditChecked && creditUsed > 0 && (
+            <p style={{ fontSize: "0.8rem", color: "#888", marginTop: "0.25rem" }}>
+              ＊購物金折抵將於付款後確認
+            </p>
+          )}
         </div>
       </div>
 

@@ -21,8 +21,11 @@ import OffersPage from "@/pages/OffersPage";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import MyReferralPage from "@/pages/MyReferralPage";
+import AdminHomePage from "@/pages/AdminHomePage";
 import AdminSettingsPage from "@/pages/AdminSettingsPage";
 import AdminSmsLogPage from "@/pages/AdminSmsLogPage";
+import AdminProductsPage from "@/pages/AdminProductsPage";
+import AdminOrdersPage from "@/pages/AdminOrdersPage";
 import FaqPage from "@/pages/FaqPage";
 import ContactPage from "@/pages/ContactPage";
 import NotFoundPage from "@/pages/NotFoundPage";
@@ -54,6 +57,9 @@ export const router = createBrowserRouter([
       { path: "login", element: <LoginPage /> },
       { path: "register", element: <RegisterPage /> },
       { path: "referral", element: <MyReferralPage /> },
+      { path: "admin", element: <AdminHomePage /> },
+      { path: "admin/products", element: <AdminProductsPage /> },
+      { path: "admin/orders", element: <AdminOrdersPage /> },
       { path: "admin/settings", element: <AdminSettingsPage /> },
       { path: "admin/sms", element: <AdminSmsLogPage /> },
       { path: "faq", element: <FaqPage /> },
@@ -64,4 +70,3 @@ export const router = createBrowserRouter([
 ]);
 
 export default router;
-
