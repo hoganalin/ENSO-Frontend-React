@@ -24,6 +24,7 @@ import MyReferralPage from "@/pages/MyReferralPage";
 import AdminHomePage from "@/pages/AdminHomePage";
 import AdminSettingsPage from "@/pages/AdminSettingsPage";
 import AdminSmsLogPage from "@/pages/AdminSmsLogPage";
+import AdminReportsPage from "@/pages/AdminReportsPage";
 import AdminProductsPage from "@/pages/AdminProductsPage";
 import AdminOrdersPage from "@/pages/AdminOrdersPage";
 import AdminMembersPage from "@/pages/AdminMembersPage";
@@ -68,6 +69,7 @@ export const router = createBrowserRouter([
       { path: "admin/promotions", element: <AdminPromotionsPage /> },
       { path: "admin/settings", element: <AdminSettingsPage /> },
       { path: "admin/sms-log", element: <AdminSmsLogPage /> },
+      { path: "admin/reports",  element: <AdminReportsPage /> },
       { path: "faq", element: <FaqPage /> },
       { path: "contact", element: <ContactPage /> },
       { path: "*", element: <NotFoundPage /> },
