@@ -10,7 +10,7 @@ import {
 } from "@/domain/storeCredit";
 import { supabase } from "@/lib/supabase";
 
-import { getCashbackRate } from "./settings";
+import { getTierRates } from "./settings";
 import type { CreditRow } from "./types";
 
 
@@ -59,15 +59,15 @@ export interface CompletedOrderWithReferrer extends CompletedOrder {
 }
 
 /**
- * 訂單完成 → 若推薦人「當下身分」為普通會員，發放購物金；否則不發（金銀卡只有可見度）。
+ * 訂單完成 → 依推薦人等級發放購物金（銀卡 silverPercent%、金卡 goldPercent%）；普通會員不發。
  * 回傳新增的 earn row，或 null（不符資格）。
  */
 export async function issueCreditForCompletedOrder(
   order: CompletedOrderWithReferrer,
   completedAtMs: number,
 ): Promise<CreditRow | null> {
-  const rate = await getCashbackRate();
-  const tx = earnTxForOrder(order, order.referrer, rate, completedAtMs);
+  const rates = await getTierRates();
+  const tx = earnTxForOrder(order, order.referrer, rates, completedAtMs);
   if (!tx) return null;
 
   const { data, error } = await supabase
