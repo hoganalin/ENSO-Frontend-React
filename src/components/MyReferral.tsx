@@ -16,6 +16,8 @@ import {
 import { getBalance, getLedger } from "@/services/db/storeCredit";
 import type { ProfileRow } from "@/services/db/types";
 import { exportExcel } from "@/utils/exportExcel";
+import MemberShell from "@/components/MemberShell";
+import styles from "@/styles/Member.module.css";
 
 const GOLD = "#c9a063";
 const currency = (n: number): string => "NT$" + n.toLocaleString();
@@ -33,7 +35,8 @@ const CREDIT_LABEL: Record<CreditTx["type"], string> = {
   reverse: "退貨回沖",
   expire: "效期到期",
 };
-const creditSigned = (t: CreditTx): number => (t.type === "earn" ? t.amount : -t.amount);
+const creditSigned = (t: CreditTx): number =>
+  t.type === "earn" || t.type === "reverse" ? t.amount : -t.amount;
 
 export default function MyReferral(): JSX.Element {
   usePageTitle("我的推薦");
@@ -54,12 +57,16 @@ export default function MyReferral(): JSX.Element {
         const p = await getCurrentProfile();
         if (!active) return;
         setProfile(p);
-        if (!p) {
-          setLoading(false);
-          return;
-        }
-        if (p.role === "referral_partner" || p.member_tier === "gold" || p.member_tier === "silver") {
-          const [r, c] = await Promise.all([getReferralReport(p.id), getMyReferralCode(p.id)]);
+        if (!p) { setLoading(false); return; }
+        if (
+          p.role === "referral_partner" ||
+          p.member_tier === "gold" ||
+          p.member_tier === "silver"
+        ) {
+          const [r, c] = await Promise.all([
+            getReferralReport(p.id),
+            getMyReferralCode(p.id),
+          ]);
           if (active) { setReport(r); setCode(c); }
         } else {
           const [c, b, l] = await Promise.all([
@@ -67,11 +74,7 @@ export default function MyReferral(): JSX.Element {
             getBalance(p.id),
             getLedger(p.id),
           ]);
-          if (active) {
-            setCode(c);
-            setBalance(b);
-            setLedger(l);
-          }
+          if (active) { setCode(c); setBalance(b); setLedger(l); }
         }
       } catch (e) {
         if (active) setError(e instanceof Error ? e.message : "載入失敗");
@@ -79,9 +82,7 @@ export default function MyReferral(): JSX.Element {
         if (active) setLoading(false);
       }
     })();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, []);
 
   const handleCopy = async (): Promise<void> => {
@@ -90,9 +91,7 @@ export default function MyReferral(): JSX.Element {
       await navigator.clipboard.writeText(code);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch {
-      /* 忽略：剪貼簿不可用時不阻擋 */
-    }
+    } catch { /* 剪貼簿不可用時不阻擋 */ }
   };
 
   const handleExport = (): void => {
@@ -119,98 +118,126 @@ export default function MyReferral(): JSX.Element {
   };
 
   if (loading) {
-    return <div className="container py-5 text-center text-muted">載入中…</div>;
+    return (
+      <MemberShell title="我的推薦">
+        <p role="status">正在讀取推薦資料…</p>
+      </MemberShell>
+    );
   }
   if (error) {
-    return <div className="container py-5 text-center text-danger">讀取失敗：{error}</div>;
+    return (
+      <MemberShell title="我的推薦">
+        <div className={styles.error} role="alert">{error}</div>
+      </MemberShell>
+    );
   }
   if (!profile) {
     return (
-      <div className="container py-5 text-center">
-        <p className="text-muted mb-3">請先登入以查看你的推薦資訊。</p>
-        <a className="btn" style={{ borderColor: GOLD, color: GOLD }} href="/login">
-          前往登入
-        </a>
-      </div>
+      <MemberShell title="我的推薦">
+        <p>
+          請先<Link to="/login">登入</Link>以查看你的推薦資訊。
+        </p>
+      </MemberShell>
     );
   }
 
-  const isPartner = profile.role === "referral_partner" || profile.member_tier === "gold" || profile.member_tier === "silver";
+  const isPartner =
+    profile.role === "referral_partner" ||
+    profile.member_tier === "gold" ||
+    profile.member_tier === "silver";
 
   return (
-    <div className="container py-5" style={{ maxWidth: 960 }}>
-      <Link to="/member">回會員中心</Link>
-      <div className="d-flex align-items-center gap-3 mb-4">
-        <h1 className="h3 m-0" style={{ letterSpacing: 2 }}>
-          我的推薦
-        </h1>
+    <MemberShell title="我的推薦">
+      {/* 等級標示 */}
+      <p style={{ margin: "0 0 1.5rem" }}>
+        目前身份：
         <span
-          className="badge"
-          style={{ background: GOLD, color: "#1a1512", fontWeight: 600 }}
+          style={{
+            display: "inline-block",
+            padding: "2px 10px",
+            borderRadius: 4,
+            background: GOLD,
+            color: "#1a1512",
+            fontWeight: 600,
+            fontSize: ".85rem",
+            marginLeft: 8,
+          }}
         >
           {TIER_LABEL[profile.member_tier] ?? profile.member_tier}
         </span>
-      </div>
+      </p>
 
       {isPartner && report ? (
+        /* ── 推薦夥伴 / 金銀卡視圖 ── */
         <>
-          <p>我的推薦碼：<strong>{code ?? "尚未設定"}</strong> <button type="button" className="btn btn-outline-secondary" disabled={!code} onClick={handleCopy}>{copied ? "已複製" : "複製推薦碼"}</button></p>
-          <div className="row g-3 mb-4">
-            <div className="col-6 col-md-4">
-              <div className="card h-100">
-                <div className="card-body">
-                  <div className="text-muted small">推薦人數</div>
-                  <div className="fs-3" style={{ color: GOLD }}>
-                    {report.refereeCount} 人
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-6 col-md-4">
-              <div className="card h-100">
-                <div className="card-body">
-                  <div className="text-muted small">名下總消費</div>
-                  <div className="fs-3" style={{ color: GOLD }}>
-                    {currency(report.networkSpent)}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-12 col-md-4 d-flex align-items-center">
+          <div className={styles.card}>
+            <p style={{ margin: 0 }}>
+              我的推薦碼：
+              <strong style={{ color: GOLD, letterSpacing: 3, fontSize: "1.1rem", marginRight: 12 }}>
+                {code ?? "尚未設定"}
+              </strong>
               <button
                 type="button"
-                className="btn w-100"
-                style={{ background: GOLD, color: "#1a1512", fontWeight: 600 }}
-                onClick={handleExport}
-                disabled={report.refereeCount === 0}
+                className={styles.button}
+                disabled={!code}
+                onClick={handleCopy}
               >
-                匯出 Excel
+                {copied ? "已複製 ✓" : "複製推薦碼"}
               </button>
+            </p>
+          </div>
+
+          {/* 統計卡片 */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem", margin: "1.5rem 0" }}>
+            <div className={styles.card} style={{ margin: 0 }}>
+              <p style={{ margin: "0 0 .25rem", fontSize: ".8rem", opacity: .7 }}>推薦人數</p>
+              <p style={{ margin: 0, fontSize: "1.75rem", color: GOLD, fontVariantNumeric: "tabular-nums" }}>
+                {report.refereeCount} 人
+              </p>
+            </div>
+            <div className={styles.card} style={{ margin: 0 }}>
+              <p style={{ margin: "0 0 .25rem", fontSize: ".8rem", opacity: .7 }}>名下總消費</p>
+              <p style={{ margin: 0, fontSize: "1.75rem", color: GOLD, fontVariantNumeric: "tabular-nums" }}>
+                {currency(report.networkSpent)}
+              </p>
             </div>
           </div>
 
-          <div className="table-responsive">
-            <table className="table align-middle">
+          <div className={styles.actions} style={{ marginBottom: "1.5rem" }}>
+            <button
+              type="button"
+              className={styles.button}
+              style={{ background: GOLD, color: "#1a1512", fontWeight: 600, borderColor: GOLD }}
+              onClick={handleExport}
+              disabled={report.refereeCount === 0}
+            >
+              匯出 Excel
+            </button>
+          </div>
+
+          <h2>被推薦人名單</h2>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: ".9rem" }}>
               <thead>
-                <tr>
-                  <th>被推薦人</th>
-                  <th>註冊日</th>
-                  <th className="text-end">訂單數</th>
-                  <th className="text-end">消費總額</th>
+                <tr style={{ borderBottom: "1px solid var(--line-strong, #a8864d)" }}>
+                  <th style={{ textAlign: "left", padding: ".6rem .75rem", fontWeight: 600 }}>被推薦人</th>
+                  <th style={{ textAlign: "left", padding: ".6rem .75rem", fontWeight: 600 }}>註冊日</th>
+                  <th style={{ textAlign: "right", padding: ".6rem .75rem", fontWeight: 600 }}>訂單數</th>
+                  <th style={{ textAlign: "right", padding: ".6rem .75rem", fontWeight: 600 }}>消費總額</th>
                 </tr>
               </thead>
               <tbody>
                 {report.referees.map((r) => (
-                  <tr key={r.id}>
-                    <td>{r.name}</td>
-                    <td>{fmtDate(r.joinedAt)}</td>
-                    <td className="text-end">{r.orderCount}</td>
-                    <td className="text-end">{currency(r.totalSpent)}</td>
+                  <tr key={r.id} style={{ borderBottom: "1px solid rgba(168,134,77,.3)" }}>
+                    <td style={{ padding: ".6rem .75rem" }}>{r.name}</td>
+                    <td style={{ padding: ".6rem .75rem" }}>{fmtDate(r.joinedAt)}</td>
+                    <td style={{ padding: ".6rem .75rem", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{r.orderCount}</td>
+                    <td style={{ padding: ".6rem .75rem", textAlign: "right", color: GOLD, fontVariantNumeric: "tabular-nums" }}>{currency(r.totalSpent)}</td>
                   </tr>
                 ))}
                 {report.refereeCount === 0 && (
                   <tr>
-                    <td colSpan={4} className="text-center text-muted py-4">
+                    <td colSpan={4} style={{ padding: "2rem .75rem", textAlign: "center", opacity: .6 }}>
                       目前還沒有人使用你的推薦碼。
                     </td>
                   </tr>
@@ -218,71 +245,77 @@ export default function MyReferral(): JSX.Element {
               </tbody>
             </table>
           </div>
-          <p className="text-muted small">
+          <p style={{ fontSize: ".8rem", opacity: .65, marginTop: "1rem" }}>
             完整訂單明細可按「匯出 Excel」下載（含彙總與逐筆訂單兩個工作表）。
           </p>
         </>
       ) : (
+        /* ── 普通會員視圖 ── */
         <>
-          <div className="card mb-4">
-            <div className="card-body">
-              <div className="text-muted small mb-1">我的推薦碼</div>
-              <div className="d-flex align-items-center gap-3">
-                <span className="fs-4" style={{ letterSpacing: 3, color: GOLD }}>
-                  {code ?? "—"}
-                </span>
-                <button
-                  type="button"
-                  className="btn btn-sm"
-                  style={{ borderColor: GOLD, color: GOLD }}
-                  onClick={handleCopy}
-                  disabled={!code}
-                >
-                  {copied ? "已複製 ✓" : "複製"}
-                </button>
-              </div>
-              <div className="text-muted small mt-2">
-                分享推薦碼給朋友，對方註冊並消費後，你可獲得購物金回饋。
-              </div>
+          {/* 推薦碼卡片 */}
+          <div className={styles.card}>
+            <p style={{ margin: "0 0 .5rem", fontSize: ".8rem", opacity: .7 }}>我的推薦連結</p>
+            <div className={styles.actions}>
+              <span style={{ fontSize: "1.2rem", letterSpacing: 3, color: GOLD }}>
+                {code ?? "—"}
+              </span>
+              <button
+                type="button"
+                className={styles.button}
+                onClick={handleCopy}
+                disabled={!code}
+              >
+                {copied ? "已複製 ✓" : "複製"}
+              </button>
             </div>
+            <p style={{ margin: ".75rem 0 0", fontSize: ".85rem", opacity: .75 }}>
+              分享推薦碼給朋友，對方註冊並消費後，你可獲得購物金回饋。
+            </p>
           </div>
 
-          <div className="card mb-4">
-            <div className="card-body">
-              <div className="text-muted small">可用購物金</div>
-              <div className="fs-2" style={{ color: GOLD }}>
-                {currency(balance)}
-              </div>
-            </div>
+          {/* 購物金卡片 */}
+          <div className={styles.card}>
+            <p style={{ margin: "0 0 .25rem", fontSize: ".8rem", opacity: .7 }}>我的購物金</p>
+            <p style={{ margin: 0, fontSize: "2rem", color: GOLD, fontVariantNumeric: "tabular-nums" }}>
+              {currency(balance)}
+            </p>
           </div>
 
-          <h2 className="h6 text-muted">購物金明細</h2>
-          <div className="table-responsive">
-            <table className="table align-middle">
+          {/* 購物金明細 */}
+          <h2>購物金明細</h2>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: ".9rem" }}>
               <thead>
-                <tr>
-                  <th>日期</th>
-                  <th>類型</th>
-                  <th className="text-end">金額</th>
+                <tr style={{ borderBottom: "1px solid var(--line-strong, #a8864d)" }}>
+                  <th style={{ textAlign: "left", padding: ".6rem .75rem", fontWeight: 600 }}>日期</th>
+                  <th style={{ textAlign: "left", padding: ".6rem .75rem", fontWeight: 600 }}>類型</th>
+                  <th style={{ textAlign: "right", padding: ".6rem .75rem", fontWeight: 600 }}>金額</th>
                 </tr>
               </thead>
               <tbody>
-                {ledger.map((t, i) => (
-                  <tr key={t.id ?? i}>
-                    <td>{fmtDate(t.createdAt)}</td>
-                    <td>{CREDIT_LABEL[t.type]}</td>
-                    <td
-                      className="text-end"
-                      style={{ color: creditSigned(t) >= 0 ? "#2f855a" : "#c53030" }}
-                    >
-                      {creditSigned(t) >= 0 ? "+" : "−"}
-                      {currency(Math.abs(t.amount)).replace("NT$", "NT$")}
-                    </td>
-                  </tr>
-                ))}
+                {ledger.map((t, i) => {
+                  const signed = creditSigned(t);
+                  return (
+                    <tr key={t.id ?? i} style={{ borderBottom: "1px solid rgba(168,134,77,.3)" }}>
+                      <td style={{ padding: ".6rem .75rem" }}>{fmtDate(t.createdAt)}</td>
+                      <td style={{ padding: ".6rem .75rem" }}>{CREDIT_LABEL[t.type]}</td>
+                      <td
+                        style={{
+                          padding: ".6rem .75rem",
+                          textAlign: "right",
+                          fontVariantNumeric: "tabular-nums",
+                          color: signed >= 0 ? "#6fcf97" : "#eb5757",
+                        }}
+                      >
+                        {signed >= 0 ? "+" : "−"}
+                        {currency(Math.abs(t.amount))}
+                      </td>
+                    </tr>
+                  );
+                })}
                 {ledger.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="text-center text-muted py-4">
+                    <td colSpan={3} style={{ padding: "2rem .75rem", textAlign: "center", opacity: .6 }}>
                       還沒有購物金紀錄。
                     </td>
                   </tr>
@@ -292,6 +325,6 @@ export default function MyReferral(): JSX.Element {
           </div>
         </>
       )}
-    </div>
+    </MemberShell>
   );
 }
