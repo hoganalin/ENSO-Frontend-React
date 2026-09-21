@@ -29,6 +29,7 @@ import AdminCreditLogPage from "@/pages/AdminCreditLogPage";
 import AdminRefundsPage from "@/pages/AdminRefundsPage";
 import AdminWarehousePage from "@/pages/AdminWarehousePage";
 import AdminSupportPage from "@/pages/AdminSupportPage";
+import AdminFinancePage from "@/pages/AdminFinancePage";
 import AdminProductsPage from "@/pages/AdminProductsPage";
 import AdminOrdersPage from "@/pages/AdminOrdersPage";
 import AdminMembersPage from "@/pages/AdminMembersPage";
@@ -78,6 +79,7 @@ export const router = createBrowserRouter([
       { path: "admin/refunds",      element: <AdminRefundsPage /> },
       { path: "admin/warehouse",    element: <AdminWarehousePage /> },
       { path: "admin/support",      element: <AdminSupportPage /> },
+      { path: "admin/finance",      element: <AdminFinancePage /> },
       { path: "faq", element: <FaqPage /> },
       { path: "contact", element: <ContactPage /> },
       { path: "*", element: <NotFoundPage /> },

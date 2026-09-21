@@ -19,6 +19,7 @@ const NAV = [
   { to: "/admin/refunds",    label: "退款管理",  icon: "↩️" },
   { to: "/admin/warehouse", label: "倉管出貨",  icon: "📦" },
   { to: "/admin/support",   label: "客服中心",  icon: "🎧" },
+  { to: "/admin/finance",  label: "財務對帳",  icon: "💹" },
 ];
 
 export default function AdminShell({ title, children }: Props) {
