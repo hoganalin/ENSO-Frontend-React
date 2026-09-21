@@ -27,6 +27,7 @@ import AdminSmsLogPage from "@/pages/AdminSmsLogPage";
 import AdminReportsPage from "@/pages/AdminReportsPage";
 import AdminCreditLogPage from "@/pages/AdminCreditLogPage";
 import AdminRefundsPage from "@/pages/AdminRefundsPage";
+import AdminWarehousePage from "@/pages/AdminWarehousePage";
 import AdminProductsPage from "@/pages/AdminProductsPage";
 import AdminOrdersPage from "@/pages/AdminOrdersPage";
 import AdminMembersPage from "@/pages/AdminMembersPage";
@@ -74,6 +75,7 @@ export const router = createBrowserRouter([
       { path: "admin/reports",     element: <AdminReportsPage /> },
       { path: "admin/credit-log",  element: <AdminCreditLogPage /> },
       { path: "admin/refunds",      element: <AdminRefundsPage /> },
+      { path: "admin/warehouse",    element: <AdminWarehousePage /> },
       { path: "faq", element: <FaqPage /> },
       { path: "contact", element: <ContactPage /> },
       { path: "*", element: <NotFoundPage /> },

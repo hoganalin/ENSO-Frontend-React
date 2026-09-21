@@ -22,6 +22,7 @@ const MENU_ITEMS: MenuItem[] = [
   { title: "營業報表",   desc: "月營業額與購物金統計",          path: "/admin/reports",   icon: "📊", roles: ["admin","finance"] },
   { title: "購物金帳本",  desc: "查看購物金發放與扣除明細",      path: "/admin/credit-log", icon: "💰", roles: ["admin","finance"] },
   { title: "退款管理",   desc: "處理訂單退款申請",              path: "/admin/refunds",   icon: "↩️", roles: ["admin","finance","support"] },
+  { title: "倉管出貨",   desc: "揀貨清單與確認出貨作業",          path: "/admin/warehouse", icon: "📦", roles: ["admin","warehouse"] },
   { title: "簡訊紀錄",    desc: "查看系統簡訊發送紀錄",           path: "/admin/sms-log",    icon: "💬", roles: ["admin","support","warehouse","marketing","finance"] },
 ];
 
