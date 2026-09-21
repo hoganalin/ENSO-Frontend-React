@@ -23,6 +23,7 @@ const MENU_ITEMS: MenuItem[] = [
   { title: "購物金帳本",  desc: "查看購物金發放與扣除明細",      path: "/admin/credit-log", icon: "💰", roles: ["admin","finance"] },
   { title: "退款管理",   desc: "處理訂單退款申請",              path: "/admin/refunds",   icon: "↩️", roles: ["admin","finance","support"] },
   { title: "倉管出貨",   desc: "揀貨清單與確認出貨作業",          path: "/admin/warehouse", icon: "📦", roles: ["admin","warehouse"] },
+  { title: "客服中心",   desc: "訂單備註與客服紀錄管理",           path: "/admin/support",   icon: "🎧", roles: ["admin","support"] },
   { title: "簡訊紀錄",    desc: "查看系統簡訊發送紀錄",           path: "/admin/sms-log",    icon: "💬", roles: ["admin","support","warehouse","marketing","finance"] },
 ];
 
