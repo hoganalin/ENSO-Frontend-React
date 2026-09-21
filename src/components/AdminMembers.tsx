@@ -1,7 +1,8 @@
 // src/components/AdminMembers.tsx — 後台：會員管理
 import React from "react";
 import { useEffect, useState, type JSX, type FormEvent } from "react";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import AdminShell from "./AdminShell";
+import styles from "@/styles/Admin.module.css";
 import { getCurrentProfile } from "@/services/db/auth";
 import { supabase } from "@/lib/supabase";
 import type { ProfileRow, UserRole } from "@/services/db/types";
@@ -56,8 +57,6 @@ function downloadMembersCSV(rows: MemberRow[]): void {
 
 // ── 主元件 ────────────────────────────────────────────────────────
 export default function AdminMembers(): JSX.Element {
-  usePageTitle("會員管理");
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<ProfileRow | null>(null);
@@ -147,11 +146,11 @@ export default function AdminMembers(): JSX.Element {
     }
   }
 
-  if (loading) return <div className="container py-5 text-center" style={{ color: "var(--enso-fg,#f5eee0)" }}>載入中…</div>;
-  if (error) return <div className="container py-5 text-center text-danger">{error}</div>;
-  if (!profile || profile.role !== "admin") {
-    return <div className="container py-5 text-center" style={{ color: "var(--enso-fg,#f5eee0)" }}>此頁僅限最高管理者存取。</div>;
-  }
+  if (loading) return <AdminShell title="會員管理"><p className={styles.muted}>載入中…</p></AdminShell>;
+  if (error) return <AdminShell title="會員管理"><div className={styles.alert}>{error}</div></AdminShell>;
+  if (!profile || profile.role !== "admin") return (
+    <AdminShell title="會員管理"><div className={styles.alert}>此頁僅限最高管理者存取。</div></AdminShell>
+  );
 
   const statCard = (label: string, count: number, accent?: string) => (
     <div
@@ -172,8 +171,7 @@ export default function AdminMembers(): JSX.Element {
   );
 
   return (
-    <div className="container py-5" style={{ maxWidth: 1100, color: "var(--enso-fg,#f5eee0)" }}>
-      <h1 className="h3 mb-4" style={{ letterSpacing: 2 }}>會員管理</h1>
+    <AdminShell title="會員管理">
 
       {/* 統計摘要 */}
       <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
@@ -261,7 +259,7 @@ export default function AdminMembers(): JSX.Element {
                 <td className="font-monospace small" style={{ color: GOLD }}>{m.referral_code ?? "—"}</td>
                 <td className="small" style={{ opacity: .75 }}>{new Date(m.created_at).toLocaleDateString("zh-TW")}</td>
                 <td>
-                  <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => openEdit(m)}>
+                  <button type="button" className={`${styles.btn} ${styles.btnSm}`} onClick={() => openEdit(m)}>
                     編輯
                   </button>
                 </td>
@@ -280,9 +278,9 @@ export default function AdminMembers(): JSX.Element {
 
       {totalPages > 1 && (
         <div className="d-flex align-items-center gap-2 mt-2">
-          <button className="btn btn-sm btn-outline-secondary" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>‹</button>
+          <button className={`${styles.btn} ${styles.btnSm}`} onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>‹</button>
           <span className="small" style={{ opacity: .65 }}>{page + 1} / {totalPages}</span>
-          <button className="btn btn-sm btn-outline-secondary" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>›</button>
+          <button className={`${styles.btn} ${styles.btnSm}`} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>›</button>
         </div>
       )}
 
@@ -312,7 +310,7 @@ export default function AdminMembers(): JSX.Element {
                   {saveError && <div className="text-danger small">{saveError}</div>}
                 </div>
                 <div className="modal-footer" style={{ borderTop: "1px solid var(--line-strong,#a8864d)" }}>
-                  <button type="button" className="btn btn-sm btn-outline-secondary" onClick={closeEdit}>取消</button>
+                  <button type="button" className={`${styles.btn} ${styles.btnSm}`} onClick={closeEdit}>取消</button>
                   <button type="submit" className="btn btn-sm" style={{ background: GOLD, color: "#1a1512", fontWeight: 600 }} disabled={saving}>
                     {saving ? "儲存中…" : "儲存"}
                   </button>
@@ -322,6 +320,6 @@ export default function AdminMembers(): JSX.Element {
           </div>
         </div>
       )}
-    </div>
+    </AdminShell>
   );
 }

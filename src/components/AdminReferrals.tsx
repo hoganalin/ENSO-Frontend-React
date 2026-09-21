@@ -1,7 +1,8 @@
 // src/components/AdminReferrals.tsx — 後台：推薦人報表
 import React from "react";
 import { useEffect, useState, type JSX } from "react";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import AdminShell from "./AdminShell";
+import styles from "@/styles/Admin.module.css";
 import { getCurrentProfile } from "@/services/db/auth";
 import { supabase } from "@/lib/supabase";
 import type { CreditRow, ProfileRow } from "@/services/db/types";
@@ -64,8 +65,6 @@ const TIER_LABEL: Record<string, string> = {
 
 // ── 主元件 ────────────────────────────────────────────────────────
 export default function AdminReferrals(): JSX.Element {
-  usePageTitle("推薦人報表");
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<ProfileRow | null>(null);
@@ -238,11 +237,11 @@ export default function AdminReferrals(): JSX.Element {
   const totalReferees = rows.reduce((s, r) => s + r.refereeCount, 0);
   const totalNetworkSpent = rows.reduce((s, r) => s + r.networkSpent, 0);
 
-  if (loading) return <div className="container py-5 text-center" style={{ color: "var(--enso-fg,#f5eee0)" }}>載入中…</div>;
-  if (error) return <div className="container py-5 text-center text-danger">{error}</div>;
-  if (!profile || profile.role !== "admin") {
-    return <div className="container py-5 text-center" style={{ color: "var(--enso-fg,#f5eee0)" }}>此頁僅限最高管理者存取。</div>;
-  }
+  if (loading) return <AdminShell title="推薦管理"><p className={styles.muted}>載入中…</p></AdminShell>;
+  if (error) return <AdminShell title="推薦管理"><div className={styles.alert}>{error}</div></AdminShell>;
+  if (!profile || profile.role !== "admin") return (
+    <AdminShell title="推薦管理"><div className={styles.alert}>此頁僅限最高管理者存取。</div></AdminShell>
+  );
 
   const statCard = (label: string, value: string | number, accent?: string) => (
     <div style={{ flex: "1 1 160px", padding: "1rem 1.25rem", background: "var(--enso-bg-elevated,#2a2e2b)", border: "1px solid var(--line-strong,#a8864d)", borderRadius: 6 }}>
@@ -252,8 +251,7 @@ export default function AdminReferrals(): JSX.Element {
   );
 
   return (
-    <div className="container py-5" style={{ maxWidth: 1100, color: "var(--enso-fg,#f5eee0)" }}>
-      <h1 className="h3 mb-4" style={{ letterSpacing: 2 }}>推薦人報表</h1>
+    <AdminShell title="推薦管理">
 
       {/* 統計摘要 */}
       <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
@@ -323,7 +321,7 @@ export default function AdminReferrals(): JSX.Element {
                   <div className="d-flex gap-1">
                     <button
                       type="button"
-                      className="btn btn-sm btn-outline-secondary"
+                      className={`${styles.btn} ${styles.btnSm}`}
                       onClick={() => openRefModal(r.id, r.name ?? "—")}
                       disabled={r.refereeCount === 0}
                     >
@@ -331,7 +329,7 @@ export default function AdminReferrals(): JSX.Element {
                     </button>
                     <button
                       type="button"
-                      className="btn btn-sm btn-outline-secondary"
+                      className={`${styles.btn} ${styles.btnSm}`}
                       onClick={() => openCreditModal(r.id, r.name ?? "—")}
                       disabled={r.refereeCount === 0}
                     >
@@ -354,9 +352,9 @@ export default function AdminReferrals(): JSX.Element {
 
       {totalPages > 1 && (
         <div className="d-flex align-items-center gap-2 mt-2">
-          <button className="btn btn-sm btn-outline-secondary" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>‹</button>
+          <button className={`${styles.btn} ${styles.btnSm}`} onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>‹</button>
           <span className="small" style={{ opacity: .65 }}>{page + 1} / {totalPages}</span>
-          <button className="btn btn-sm btn-outline-secondary" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>›</button>
+          <button className={`${styles.btn} ${styles.btnSm}`} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>›</button>
         </div>
       )}
 
@@ -408,7 +406,7 @@ export default function AdminReferrals(): JSX.Element {
                 )}
               </div>
               <div className="modal-footer" style={{ borderTop: "1px solid var(--line-strong,#a8864d)" }}>
-                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setRefModal(null)}>關閉</button>
+                <button type="button" className={`${styles.btn} ${styles.btnSm}`} onClick={() => setRefModal(null)}>關閉</button>
               </div>
             </div>
           </div>
@@ -470,12 +468,12 @@ export default function AdminReferrals(): JSX.Element {
                 )}
               </div>
               <div className="modal-footer" style={{ borderTop: "1px solid var(--line-strong,#a8864d)" }}>
-                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setCreditModal(null)}>關閉</button>
+                <button type="button" className={`${styles.btn} ${styles.btnSm}`} onClick={() => setCreditModal(null)}>關閉</button>
               </div>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </AdminShell>
   );
 }
