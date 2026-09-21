@@ -20,6 +20,7 @@ const MENU_ITEMS: MenuItem[] = [
   { title: "優惠活動",    desc: "管理折扣碼及各類優惠活動",       path: "/admin/promotions", icon: "🎁", roles: ["admin","marketing"] },
   { title: "系統設定",    desc: "購物金比例等全站設定",           path: "/admin/settings",   icon: "⚙️", roles: ["admin"] },
   { title: "營業報表",   desc: "月營業額與購物金統計",          path: "/admin/reports",   icon: "📊", roles: ["admin","finance"] },
+  { title: "購物金帳本",  desc: "查看購物金發放與扣除明細",      path: "/admin/credit-log", icon: "💰", roles: ["admin","finance"] },
   { title: "簡訊紀錄",    desc: "查看系統簡訊發送紀錄",           path: "/admin/sms-log",    icon: "💬", roles: ["admin","support","warehouse","marketing","finance"] },
 ];
 

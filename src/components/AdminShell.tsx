@@ -15,6 +15,7 @@ const NAV = [
   { to: "/admin/settings",  label: "系統設定",  icon: "⚙️" },
   { to: "/admin/sms-log",   label: "簡訊記錄",  icon: "📱" },
   { to: "/admin/reports",  label: "營業報表",  icon: "📊" },
+  { to: "/admin/credit-log", label: "購物金帳本", icon: "💰" },
 ];
 
 export default function AdminShell({ title, children }: Props) {
