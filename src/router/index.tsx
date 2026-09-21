@@ -67,7 +67,7 @@ export const router = createBrowserRouter([
       { path: "admin/referrals", element: <AdminReferralsPage /> },
       { path: "admin/promotions", element: <AdminPromotionsPage /> },
       { path: "admin/settings", element: <AdminSettingsPage /> },
-      { path: "admin/sms", element: <AdminSmsLogPage /> },
+      { path: "admin/sms-log", element: <AdminSmsLogPage /> },
       { path: "faq", element: <FaqPage /> },
       { path: "contact", element: <ContactPage /> },
       { path: "*", element: <NotFoundPage /> },
