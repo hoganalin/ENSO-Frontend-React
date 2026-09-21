@@ -22,6 +22,7 @@ export interface RefereeOrder {
 export interface RefereeReport {
   id: string;
   name: string;
+  memberTier: string;
   joinedAt: string;
   orderCount: number;
   totalSpent: number;
@@ -66,6 +67,7 @@ export async function getReferralReport(referrerId: string): Promise<ReferralRep
     return {
       id: p.id,
       name: p.name ?? "(未命名)",
+      memberTier: p.member_tier as string,
       joinedAt: p.created_at,
       orderCount: own.length,
       totalSpent: own.reduce((sum, o) => sum + o.subtotal, 0),

@@ -1,4 +1,5 @@
 // src/components/AdminMembers.tsx — 後台：會員管理
+import React from "react";
 import { useEffect, useState, type JSX, type FormEvent } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { getCurrentProfile } from "@/services/db/auth";
@@ -19,13 +20,41 @@ const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
 ];
 
 const TIER_OPTIONS = [
-  { value: "standard", label: "一般" },
+  { value: "normal", label: "一般" },
   { value: "silver", label: "銀卡" },
   { value: "gold", label: "金卡" },
 ];
 
 type MemberRow = Pick<ProfileRow, "id" | "name" | "phone" | "role" | "member_tier" | "referral_code" | "created_at">;
 
+// ── CSV 匯出工具 ──────────────────────────────────────────────────
+function downloadMembersCSV(rows: MemberRow[]): void {
+  const headers = ["姓名", "電話", "等級", "角色", "推薦碼", "加入日期"];
+  const lines = [
+    headers.join(","),
+    ...rows.map((m) => [
+      m.name ?? "",
+      m.phone ?? "",
+      TIER_OPTIONS.find((t) => t.value === (m.member_tier as string))?.label ?? m.member_tier,
+      ROLE_OPTIONS.find((r) => r.value === m.role)?.label ?? m.role,
+      m.referral_code ?? "",
+      new Date(m.created_at).toLocaleDateString("zh-TW"),
+    ]
+      .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+      .join(","))
+  ];
+  const csv = "﻿" + lines.join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const today = new Date().toISOString().slice(0, 10);
+  a.download = `ENSO_會員資料_${today}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── 主元件 ────────────────────────────────────────────────────────
 export default function AdminMembers(): JSX.Element {
   usePageTitle("會員管理");
 
@@ -38,7 +67,7 @@ export default function AdminMembers(): JSX.Element {
   const [page, setPage] = useState(0);
   const [editing, setEditing] = useState<MemberRow | null>(null);
   const [editRole, setEditRole] = useState<UserRole>("customer");
-  const [editTier, setEditTier] = useState("standard");
+  const [editTier, setEditTier] = useState("normal");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -67,8 +96,9 @@ export default function AdminMembers(): JSX.Element {
     return () => { active = false; };
   }, []);
 
-  const filtered = members.filter(m => {
-    const matchSearch = !search ||
+  const filtered = members.filter((m) => {
+    const matchSearch =
+      !search ||
       (m.name ?? "").toLowerCase().includes(search.toLowerCase()) ||
       (m.phone ?? "").includes(search) ||
       (m.referral_code ?? "").toLowerCase().includes(search.toLowerCase());
@@ -78,13 +108,17 @@ export default function AdminMembers(): JSX.Element {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
+  // 統計摘要
+  const goldCount = members.filter((m) => (m.member_tier as string) === "gold").length;
+  const silverCount = members.filter((m) => (m.member_tier as string) === "silver").length;
+  const normalCount = members.filter((m) => (m.member_tier as string) === "normal").length;
+
   function openEdit(m: MemberRow) {
     setEditing(m);
     setEditRole(m.role);
     setEditTier(m.member_tier as string);
     setSaveError(null);
   }
-
   function closeEdit() { setEditing(null); setSaveError(null); }
 
   async function handleSave(e: FormEvent) {
@@ -98,11 +132,13 @@ export default function AdminMembers(): JSX.Element {
         .update({ role: editRole, member_tier: editTier })
         .eq("id", editing.id);
       if (dbErr) throw dbErr;
-      setMembers(prev => prev.map(m =>
-        m.id === editing.id
-          ? { ...m, role: editRole, member_tier: editTier as ProfileRow["member_tier"] }
-          : m
-      ));
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.id === editing.id
+            ? { ...m, role: editRole, member_tier: editTier as ProfileRow["member_tier"] }
+            : m
+        )
+      );
       closeEdit();
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : "儲存失敗");
@@ -111,24 +147,51 @@ export default function AdminMembers(): JSX.Element {
     }
   }
 
-  if (loading) return <div className="container py-5 text-center text-muted">載入中…</div>;
+  if (loading) return <div className="container py-5 text-center" style={{ color: "var(--enso-fg,#f5eee0)" }}>載入中…</div>;
   if (error) return <div className="container py-5 text-center text-danger">{error}</div>;
   if (!profile || profile.role !== "admin") {
-    return <div className="container py-5 text-center text-muted">此頁僅限最高管理者存取。</div>;
+    return <div className="container py-5 text-center" style={{ color: "var(--enso-fg,#f5eee0)" }}>此頁僅限最高管理者存取。</div>;
   }
 
+  const statCard = (label: string, count: number, accent?: string) => (
+    <div
+      style={{
+        flex: "1 1 140px",
+        padding: "1rem 1.25rem",
+        background: "var(--enso-bg-elevated, #2a2e2b)",
+        border: "1px solid var(--line-strong, #a8864d)",
+        borderRadius: 6,
+        minWidth: 0,
+      }}
+    >
+      <div style={{ fontSize: ".78rem", opacity: .7, marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: "1.6rem", color: accent ?? "var(--enso-fg,#f5eee0)", fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
+        {count}
+      </div>
+    </div>
+  );
+
   return (
-    <div className="container py-5" style={{ maxWidth: 1100 }}>
+    <div className="container py-5" style={{ maxWidth: 1100, color: "var(--enso-fg,#f5eee0)" }}>
       <h1 className="h3 mb-4" style={{ letterSpacing: 2 }}>會員管理</h1>
 
-      <div className="row g-2 mb-3">
+      {/* 統計摘要 */}
+      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
+        {statCard("總會員數", members.length)}
+        {statCard("金卡", goldCount, GOLD)}
+        {statCard("銀卡", silverCount, "#b0b0b0")}
+        {statCard("一般", normalCount)}
+      </div>
+
+      {/* 搜尋 + 篩選 + 匯出 */}
+      <div className="row g-2 mb-3 align-items-center">
         <div className="col-auto">
           <input
             type="search"
             className="form-control"
             placeholder="搜尋姓名、電話或推薦碼…"
             value={search}
-            onChange={e => { setSearch(e.target.value); setPage(0); }}
+            onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             style={{ maxWidth: 260 }}
           />
         </div>
@@ -136,21 +199,32 @@ export default function AdminMembers(): JSX.Element {
           <select
             className="form-select"
             value={tierFilter}
-            onChange={e => { setTierFilter(e.target.value); setPage(0); }}
+            onChange={(e) => { setTierFilter(e.target.value); setPage(0); }}
           >
             <option value="">所有等級</option>
-            {TIER_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            {TIER_OPTIONS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
         </div>
-        <div className="col-auto d-flex align-items-center text-muted small">
+        <div className="col-auto" style={{ opacity: .65, fontSize: ".875rem" }}>
           共 {filtered.length} 筆
+        </div>
+        <div className="col-auto ms-auto">
+          <button
+            type="button"
+            className="btn btn-sm"
+            style={{ background: GOLD, color: "#1a1512", fontWeight: 600, border: "none" }}
+            onClick={() => downloadMembersCSV(filtered)}
+            disabled={filtered.length === 0}
+          >
+            匯出會員資料 CSV
+          </button>
         </div>
       </div>
 
       <div className="table-responsive">
-        <table className="table align-middle">
-          <thead className="table-light">
-            <tr>
+        <table className="table align-middle" style={{ "--bs-table-bg": "transparent", "--bs-table-color": "var(--enso-fg,#f5eee0)", "--bs-table-border-color": "rgba(168,134,77,.3)" } as React.CSSProperties}>
+          <thead>
+            <tr style={{ borderBottom: "1px solid var(--line-strong,#a8864d)" }}>
               <th>姓名</th>
               <th>電話</th>
               <th>等級</th>
@@ -161,26 +235,31 @@ export default function AdminMembers(): JSX.Element {
             </tr>
           </thead>
           <tbody>
-            {paged.map(m => (
-              <tr key={m.id}>
+            {paged.map((m) => (
+              <tr key={m.id} style={{ borderBottom: "1px solid rgba(168,134,77,.2)" }}>
                 <td>{m.name ?? "—"}</td>
                 <td className="font-monospace small">{m.phone ?? "—"}</td>
                 <td>
                   <span
                     className="badge"
                     style={{
-                      background: (m.member_tier as string) === "gold" ? GOLD : (m.member_tier as string) === "silver" ? "#aaa" : "#e9ecef",
-                      color: (m.member_tier as string) === "gold" ? "#1a1512" : "#555",
+                      background:
+                        (m.member_tier as string) === "gold"
+                          ? GOLD
+                          : (m.member_tier as string) === "silver"
+                          ? "#888"
+                          : "#3a3e3b",
+                      color: (m.member_tier as string) === "gold" ? "#1a1512" : "#e0e0e0",
                     }}
                   >
-                    {TIER_OPTIONS.find(t => t.value === (m.member_tier as string))?.label ?? (m.member_tier as string)}
+                    {TIER_OPTIONS.find((t) => t.value === (m.member_tier as string))?.label ?? m.member_tier}
                   </span>
                 </td>
-                <td className="text-muted small">
-                  {ROLE_OPTIONS.find(r => r.value === m.role)?.label ?? m.role}
+                <td className="small" style={{ opacity: .75 }}>
+                  {ROLE_OPTIONS.find((r) => r.value === m.role)?.label ?? m.role}
                 </td>
                 <td className="font-monospace small" style={{ color: GOLD }}>{m.referral_code ?? "—"}</td>
-                <td className="text-muted small">{new Date(m.created_at).toLocaleDateString("zh-TW")}</td>
+                <td className="small" style={{ opacity: .75 }}>{new Date(m.created_at).toLocaleDateString("zh-TW")}</td>
                 <td>
                   <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => openEdit(m)}>
                     編輯
@@ -190,7 +269,7 @@ export default function AdminMembers(): JSX.Element {
             ))}
             {paged.length === 0 && (
               <tr>
-                <td colSpan={7} className="text-center text-muted py-4">
+                <td colSpan={7} className="text-center py-4" style={{ opacity: .5 }}>
                   {search || tierFilter ? "找不到符合的會員" : "尚無會員資料"}
                 </td>
               </tr>
@@ -201,38 +280,39 @@ export default function AdminMembers(): JSX.Element {
 
       {totalPages > 1 && (
         <div className="d-flex align-items-center gap-2 mt-2">
-          <button className="btn btn-sm btn-outline-secondary" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>‹</button>
-          <span className="text-muted small">{page + 1} / {totalPages}</span>
-          <button className="btn btn-sm btn-outline-secondary" onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>›</button>
+          <button className="btn btn-sm btn-outline-secondary" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>‹</button>
+          <span className="small" style={{ opacity: .65 }}>{page + 1} / {totalPages}</span>
+          <button className="btn btn-sm btn-outline-secondary" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>›</button>
         </div>
       )}
 
+      {/* 編輯 Modal */}
       {editing && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }} onClick={e => { if (e.target === e.currentTarget) closeEdit(); }}>
+        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.65)" }} onClick={(e) => { if (e.target === e.currentTarget) closeEdit(); }}>
           <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
+            <div className="modal-content" style={{ background: "var(--enso-bg-elevated,#2a2e2b)", color: "var(--enso-fg,#f5eee0)", border: "1px solid var(--line-strong,#a8864d)" }}>
+              <div className="modal-header" style={{ borderBottom: "1px solid var(--line-strong,#a8864d)" }}>
                 <h5 className="modal-title">編輯會員：{editing.name ?? editing.id.slice(0, 8)}</h5>
-                <button type="button" className="btn-close" onClick={closeEdit} />
+                <button type="button" className="btn-close btn-close-white" onClick={closeEdit} />
               </div>
               <form onSubmit={handleSave}>
                 <div className="modal-body">
                   <div className="mb-3">
                     <label className="form-label">會員等級</label>
-                    <select className="form-select" value={editTier} onChange={e => setEditTier(e.target.value)}>
-                      {TIER_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                    <select className="form-select" value={editTier} onChange={(e) => setEditTier(e.target.value)} style={{ background: "#1a1d1b", color: "var(--enso-fg,#f5eee0)", border: "1px solid var(--line-strong,#a8864d)" }}>
+                      {TIER_OPTIONS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                     </select>
                   </div>
                   <div className="mb-3">
                     <label className="form-label">角色權限</label>
-                    <select className="form-select" value={editRole} onChange={e => setEditRole(e.target.value as UserRole)}>
-                      {ROLE_OPTIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                    <select className="form-select" value={editRole} onChange={(e) => setEditRole(e.target.value as UserRole)} style={{ background: "#1a1d1b", color: "var(--enso-fg,#f5eee0)", border: "1px solid var(--line-strong,#a8864d)" }}>
+                      {ROLE_OPTIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
                     </select>
                   </div>
                   {saveError && <div className="text-danger small">{saveError}</div>}
                 </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary btn-sm" onClick={closeEdit}>取消</button>
+                <div className="modal-footer" style={{ borderTop: "1px solid var(--line-strong,#a8864d)" }}>
+                  <button type="button" className="btn btn-sm btn-outline-secondary" onClick={closeEdit}>取消</button>
                   <button type="submit" className="btn btn-sm" style={{ background: GOLD, color: "#1a1512", fontWeight: 600 }} disabled={saving}>
                     {saving ? "儲存中…" : "儲存"}
                   </button>

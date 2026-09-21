@@ -215,21 +215,39 @@ export default function MyReferral(): JSX.Element {
             </button>
           </div>
 
-          <h2>被推薦人名單</h2>
+          <h2 style={{ marginTop: "1.5rem" }}>被推薦人名單（金/銀卡）</h2>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: ".9rem" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--line-strong, #a8864d)" }}>
                   <th style={{ textAlign: "left", padding: ".6rem .75rem", fontWeight: 600 }}>被推薦人</th>
+                  <th style={{ textAlign: "left", padding: ".6rem .75rem", fontWeight: 600 }}>等級</th>
                   <th style={{ textAlign: "left", padding: ".6rem .75rem", fontWeight: 600 }}>註冊日</th>
                   <th style={{ textAlign: "right", padding: ".6rem .75rem", fontWeight: 600 }}>訂單數</th>
                   <th style={{ textAlign: "right", padding: ".6rem .75rem", fontWeight: 600 }}>消費總額</th>
                 </tr>
               </thead>
               <tbody>
-                {report.referees.map((r) => (
+                {[...report.referees]
+                  .sort((a, b) => {
+                    const rank: Record<string, number> = { gold: 0, silver: 1, normal: 2 };
+                    return (rank[a.memberTier] ?? 3) - (rank[b.memberTier] ?? 3);
+                  })
+                  .map((r) => (
                   <tr key={r.id} style={{ borderBottom: "1px solid rgba(168,134,77,.3)" }}>
                     <td style={{ padding: ".6rem .75rem" }}>{r.name}</td>
+                    <td style={{ padding: ".6rem .75rem" }}>
+                      <span style={{
+                        display: "inline-block",
+                        padding: "1px 8px",
+                        borderRadius: 4,
+                        fontSize: ".78rem",
+                        background: r.memberTier === "gold" ? GOLD : r.memberTier === "silver" ? "#888" : "#3a3e3b",
+                        color: r.memberTier === "gold" ? "#1a1512" : "#e0e0e0",
+                      }}>
+                        {TIER_LABEL[r.memberTier] ?? r.memberTier}
+                      </span>
+                    </td>
                     <td style={{ padding: ".6rem .75rem" }}>{fmtDate(r.joinedAt)}</td>
                     <td style={{ padding: ".6rem .75rem", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{r.orderCount}</td>
                     <td style={{ padding: ".6rem .75rem", textAlign: "right", color: GOLD, fontVariantNumeric: "tabular-nums" }}>{currency(r.totalSpent)}</td>
@@ -237,7 +255,7 @@ export default function MyReferral(): JSX.Element {
                 ))}
                 {report.refereeCount === 0 && (
                   <tr>
-                    <td colSpan={4} style={{ padding: "2rem .75rem", textAlign: "center", opacity: .6 }}>
+                    <td colSpan={5} style={{ padding: "2rem .75rem", textAlign: "center", opacity: .6 }}>
                       目前還沒有人使用你的推薦碼。
                     </td>
                   </tr>
