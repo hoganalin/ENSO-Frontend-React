@@ -35,16 +35,15 @@ begin;
 -- ---------- 算出「正確答案」 ----------
 -- 規則（對齊 src/domain/storeCredit.ts 的 creditForCompletedOrder）：
 --   • 沒有推薦人 → 不發
---   • 推薦人身分不是 normal → 不發（金／銀卡只有可見度）
---   • 金額 = subtotal × app_settings.referral_cashback_rate ÷ 100，四捨五入
+--   • 推薦人身分 normal → 不發（普通會員不發回饋金）
+--   • 推薦人身分 silver → subtotal × silver_cashback_rate ÷ 100，四捨五入（預設 10%）
+--   • 推薦人身分 gold   → subtotal × gold_cashback_rate  ÷ 100，四捨五入（預設 20%）
 --   • 只有 completed 的訂單才發
 create temporary table recon on commit drop as
-with rate as (
-  select coalesce(
-           (select nullif(value #>> '{}', '')::numeric
-              from public.app_settings where key = 'referral_cashback_rate'),
-           0
-         ) as pct
+with rates as (
+  select
+    coalesce((select nullif(value #>> '{}','')::numeric from public.app_settings where key='silver_cashback_rate'), 10) as silver_pct,
+    coalesce((select nullif(value #>> '{}','')::numeric from public.app_settings where key='gold_cashback_rate'),   20) as gold_pct
 )
 select
   o.id                          as order_id,
@@ -57,10 +56,11 @@ select
   coalesce(e.amount, 0)         as earned_now,
   e.id                          as earn_row_id,
   case
-    when o.status <> 'completed'            then 0
-    when o.referrer_id is null              then 0
-    when r.member_tier is distinct from 'normal' then 0
-    else round(o.subtotal * (select pct from rate) / 100)::integer
+    when o.status <> 'completed'  then 0
+    when o.referrer_id is null    then 0
+    when r.member_tier = 'silver' then round(o.subtotal * (select silver_pct from rates) / 100)::integer
+    when r.member_tier = 'gold'   then round(o.subtotal * (select gold_pct  from rates) / 100)::integer
+    else 0  -- normal 不發回饋金
   end                           as earned_should
 from public.orders o
 left join public.profiles r on r.id = o.referrer_id

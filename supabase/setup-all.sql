@@ -148,8 +148,9 @@ create table if not exists public.app_settings (
   value      jsonb not null,
   updated_at timestamptz not null default now()
 );
-insert into public.app_settings(key, value)
-  values ('referral_cashback_rate', '10'::jsonb)   -- 全站購物金比例(%)，管理者可改
+insert into public.app_settings(key, value) values
+  ('silver_cashback_rate', '10'::jsonb),  -- 銀卡推薦回饋比例(%)，管理者可改
+  ('gold_cashback_rate',   '20'::jsonb)   -- 金卡推薦回饋比例(%)，管理者可改
   on conflict (key) do nothing;
 
 -- ---------- sms_log（購物/推薦簡訊；demo 為模擬） ----------

@@ -202,10 +202,16 @@ begin
   if existing_credit is null and ord.referrer_id is not null then
     tier := ord.referrer_tier_snapshot;
     if tier is null then select member_tier::text into tier from public.profiles where id=ord.referrer_id; end if;
-    if tier='normal' then
-      select (value #>> '{}')::numeric into rate from public.app_settings where key='referral_cashback_rate';
-      rate := coalesce(rate,0);
-      if rate < 0 or rate > 100 then raise exception 'Invalid referral rate'; end if;
+    if tier='silver' then
+      select (value #>> '{}')::numeric into rate from public.app_settings where key='silver_cashback_rate';
+      rate := coalesce(rate,10);
+    elsif tier='gold' then
+      select (value #>> '{}')::numeric into rate from public.app_settings where key='gold_cashback_rate';
+      rate := coalesce(rate,20);
+    end if;
+    -- normal 會員不發回饋金，只有 silver(10%) / gold(20%) 才發
+    if rate > 0 then
+      if rate > 100 then raise exception 'Invalid referral rate'; end if;
       credit := round(ord.subtotal * rate / 100);
       if credit > 0 then
         insert into public.store_credit_ledger(member_id,type,amount,order_id,created_at,expires_at)

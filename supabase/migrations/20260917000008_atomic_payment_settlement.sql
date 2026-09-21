@@ -64,6 +64,7 @@ begin
     tier := ord.referrer_tier_snapshot;
     if tier is null then select member_tier::text into tier from public.profiles where id=ord.referrer_id; end if;
     if tier='normal' then
+      -- ⚠️ 歷史版本：已由 20260921000001 取代，key 已改為 silver_cashback_rate / gold_cashback_rate
       select (value #>> '{}')::numeric into rate from public.app_settings where key='referral_cashback_rate';
       rate := coalesce(rate,0);
       if rate < 0 or rate > 100 then raise exception 'Invalid referral rate'; end if;
