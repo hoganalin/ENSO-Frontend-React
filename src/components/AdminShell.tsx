@@ -1,8 +1,9 @@
 import { useEffect, useState, type ReactNode, type JSX } from "react";
-import { NavLink } from "react-router";
+import { NavLink, ScrollRestoration } from "react-router";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { getCurrentProfile } from "@/services/db/auth";
 import type { ProfileRow } from "@/services/db/types";
+import MessageToast from "@/components/MessageToast";
 import styles from "@/styles/Admin.module.css";
 
 interface Props { title: string; children: ReactNode }
@@ -84,65 +85,69 @@ export default function AdminShell({ title, children }: Props): JSX.Element {
   const initials = profile?.name ? profile.name.slice(0, 1) : "A";
 
   return (
-    <div className={styles.shell}>
-      {/* ── Sidebar ─────────────────────────────────────── */}
-      <aside className={styles.sidebar}>
+    <>
+      <ScrollRestoration />
+      <MessageToast />
+      <div className={styles.shell}>
+        {/* ── Sidebar ─────────────────────────────────────── */}
+        <aside className={styles.sidebar}>
 
-        {/* Brand / logo area */}
-        <div className={styles.sidebarBrand}>
-          <div className={styles.sidebarKanji}>禪</div>
-          <div className={styles.sidebarLogo}>
-            <span className={styles.sidebarLogoAccent}>ENSO</span>
-            {" "}ADMIN
-          </div>
-        </div>
-
-        {/* Nav groups */}
-        <nav className={styles.sidebarNav}>
-          {NAV_GROUPS.map(group => (
-            <div key={group.label} className={styles.navGroup}>
-              <span className={styles.navGroupLabel}>{group.label}</span>
-              {group.items.map(({ to, label, icon, end }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={end}
-                  className={({ isActive }) =>
-                    `${styles.sidebarLink}${isActive ? ` ${styles.active}` : ""}`
-                  }
-                >
-                  <span className={styles.sidebarIcon}>{icon}</span>
-                  {label}
-                </NavLink>
-              ))}
+          {/* Brand / logo area */}
+          <div className={styles.sidebarBrand}>
+            <div className={styles.sidebarKanji}>禪</div>
+            <div className={styles.sidebarLogo}>
+              <span className={styles.sidebarLogoAccent}>ENSO</span>
+              {" "}ADMIN
             </div>
-          ))}
-        </nav>
+          </div>
 
-        {/* User info at bottom */}
-        <div className={styles.sidebarFooter}>
-          <div className={styles.sidebarUser}>
-            <div className={styles.sidebarAvatar}>{initials}</div>
-            <div className={styles.sidebarUserInfo}>
-              <div className={styles.sidebarUserName}>{profile?.name ?? "管理員"}</div>
-              <div className={styles.sidebarUserRole}>
-                {ROLE_LABEL[profile?.role ?? ""] ?? profile?.role ?? "—"}
+          {/* Nav groups */}
+          <nav className={styles.sidebarNav}>
+            {NAV_GROUPS.map(group => (
+              <div key={group.label} className={styles.navGroup}>
+                <span className={styles.navGroupLabel}>{group.label}</span>
+                {group.items.map(({ to, label, icon, end }) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    end={end}
+                    className={({ isActive }) =>
+                      `${styles.sidebarLink}${isActive ? ` ${styles.active}` : ""}`
+                    }
+                  >
+                    <span className={styles.sidebarIcon}>{icon}</span>
+                    {label}
+                  </NavLink>
+                ))}
+              </div>
+            ))}
+          </nav>
+
+          {/* User info at bottom */}
+          <div className={styles.sidebarFooter}>
+            <div className={styles.sidebarUser}>
+              <div className={styles.sidebarAvatar}>{initials}</div>
+              <div className={styles.sidebarUserInfo}>
+                <div className={styles.sidebarUserName}>{profile?.name ?? "管理員"}</div>
+                <div className={styles.sidebarUserRole}>
+                  {ROLE_LABEL[profile?.role ?? ""] ?? profile?.role ?? "—"}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </aside>
+        </aside>
 
-      {/* ── Main ────────────────────────────────────────── */}
-      <div className={styles.main}>
-        <div className={styles.topbar}>
-          <h1 className={styles.topbarTitle}>{title}</h1>
-          <div className={styles.topbarMeta}>
-            <div className={styles.topbarDate}>{dateStr}</div>
+        {/* ── Main ────────────────────────────────────────── */}
+        <div className={styles.main}>
+          <div className={styles.topbar}>
+            <h1 className={styles.topbarTitle}>{title}</h1>
+            <div className={styles.topbarMeta}>
+              <div className={styles.topbarDate}>{dateStr}</div>
+            </div>
           </div>
+          <div className={styles.content}>{children}</div>
         </div>
-        <div className={styles.content}>{children}</div>
       </div>
-    </div>
+    </>
   );
 }

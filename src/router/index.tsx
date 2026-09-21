@@ -40,6 +40,7 @@ import ContactPage from "@/pages/ContactPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 
 export const router = createBrowserRouter([
+  // ── 前台（含 header / footer）────────────────────────────────────────
   {
     path: "/",
     element: <FrontendLayout />,
@@ -66,25 +67,27 @@ export const router = createBrowserRouter([
       { path: "login", element: <LoginPage /> },
       { path: "register", element: <RegisterPage /> },
       { path: "referral", element: <MyReferralPage /> },
-      { path: "admin", element: <AdminHomePage /> },
-      { path: "admin/products", element: <AdminProductsPage /> },
-      { path: "admin/orders", element: <AdminOrdersPage /> },
-      { path: "admin/members", element: <AdminMembersPage /> },
-      { path: "admin/referrals", element: <AdminReferralsPage /> },
-      { path: "admin/promotions", element: <AdminPromotionsPage /> },
-      { path: "admin/settings", element: <AdminSettingsPage /> },
-      { path: "admin/sms-log", element: <AdminSmsLogPage /> },
-      { path: "admin/reports",     element: <AdminReportsPage /> },
-      { path: "admin/credit-log",  element: <AdminCreditLogPage /> },
-      { path: "admin/refunds",      element: <AdminRefundsPage /> },
-      { path: "admin/warehouse",    element: <AdminWarehousePage /> },
-      { path: "admin/support",      element: <AdminSupportPage /> },
-      { path: "admin/finance",      element: <AdminFinancePage /> },
       { path: "faq", element: <FaqPage /> },
       { path: "contact", element: <ContactPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],
   },
+
+  // ── 後台（獨立 layout，AdminShell 自帶 sidebar + topbar）────────────
+  { path: "/admin",            element: <AdminHomePage /> },
+  { path: "/admin/products",   element: <AdminProductsPage /> },
+  { path: "/admin/orders",     element: <AdminOrdersPage /> },
+  { path: "/admin/members",    element: <AdminMembersPage /> },
+  { path: "/admin/referrals",  element: <AdminReferralsPage /> },
+  { path: "/admin/promotions", element: <AdminPromotionsPage /> },
+  { path: "/admin/settings",   element: <AdminSettingsPage /> },
+  { path: "/admin/sms-log",    element: <AdminSmsLogPage /> },
+  { path: "/admin/reports",    element: <AdminReportsPage /> },
+  { path: "/admin/credit-log", element: <AdminCreditLogPage /> },
+  { path: "/admin/refunds",    element: <AdminRefundsPage /> },
+  { path: "/admin/warehouse",  element: <AdminWarehousePage /> },
+  { path: "/admin/support",    element: <AdminSupportPage /> },
+  { path: "/admin/finance",    element: <AdminFinancePage /> },
 ]);
 
 export default router;
