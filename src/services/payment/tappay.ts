@@ -11,7 +11,7 @@
 //   VITE_TAPPAY_ENV      sandbox | production（預設 sandbox）
 
 import { supabase } from "@/lib/supabase";
-import { PaymentError } from "./client";
+import { PaymentError } from "./errors";
 
 const env = import.meta.env as Record<string, string | undefined>;
 const SDK_URL = "https://js.tappaysdk.com/sdk/tpdirect/v5.19.0";
