@@ -12,7 +12,7 @@ import { preflightResponse } from "../_shared/cors.ts";
 import { errorResponse, jsonResponse } from "../_shared/response.ts";
 import { createAdminClient, getCallerUserId } from "../_shared/supabaseAdmin.ts";
 import { validateOrderAmounts } from "../_shared/orderAmounts.ts";
-import { toMerchantTradeNo } from "../_shared/ecpay.ts";
+import { toMerchantTradeNo } from "../_shared/tradeNo.ts";
 import { loadTappayConfig, payByPrime } from "../_shared/tappay.ts";
 import { processDeliveryJobs } from "../_shared/delivery.ts";
 
