@@ -17,6 +17,8 @@ export function toStoreProduct(row: ProductRow): Product {
     imageUrl: row.image_url ?? "",
     imagesUrl: row.images_url ?? [],
     scenes: row.scenes ?? [],
+    features: row.features ?? "",
+    specs: row.specs ?? [],
     feature: "",
   };
 }

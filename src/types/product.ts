@@ -17,6 +17,8 @@ export interface Product {
   is_enabled: boolean;
   imageUrl: string;
   imagesUrl: string[];
+  features: string;
+  specs: { label: string; value: string }[];
   feature: string;
   eng_title?: string;
   burning_time?: string;

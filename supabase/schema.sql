@@ -63,6 +63,8 @@ create table if not exists public.products (
   inventory    integer not null default 0,
   top_smell    text, heart_smell text, base_smell text,
   scenes       jsonb not null default '[]',
+  features     text,
+  specs        jsonb not null default '[]',
   created_at   timestamptz not null default now()
 );
 

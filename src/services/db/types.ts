@@ -58,6 +58,8 @@ export interface ProductRow {
   heart_smell: string | null;
   base_smell: string | null;
   scenes: string[];
+  features: string | null;
+  specs: { label: string; value: string }[];
   created_at: string;
 }
 

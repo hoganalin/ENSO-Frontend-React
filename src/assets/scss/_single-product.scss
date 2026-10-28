@@ -213,3 +213,109 @@
     &:focus { outline: none; }
   }
 }
+
+/* ============================================
+   Product detail — info tabs (特色 / 規格 / 描述)
+   ============================================ */
+.enso-detail__stock {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 0; margin: 4px 0 24px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-serif-jp);
+  font-size: 13px; letter-spacing: 0.1em;
+  span:first-child { color: var(--fg-muted); letter-spacing: 0.2em; }
+  span:last-child { color: var(--enso-fg); }
+}
+
+.enso-detail__tabs-section {
+  margin-top: 96px;
+  padding: 0 48px;
+  @media (max-width: 768px) { margin-top: 64px; padding: 0 24px; }
+}
+
+.enso-detail__tabs-inner {
+  max-width: 920px; margin: 0 auto;
+}
+
+.enso-detail__tablist {
+  display: flex; gap: 0;
+  border-bottom: 1px solid var(--line);
+  @media (max-width: 560px) { flex-wrap: wrap; }
+}
+
+.enso-detail__tab {
+  flex: 1;
+  background: transparent; border: none; cursor: pointer;
+  padding: 18px 12px;
+  color: var(--fg-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.3s, border-color 0.3s;
+
+  .cn {
+    display: block;
+    font-family: var(--font-serif-jp);
+    font-size: 16px; letter-spacing: 0.2em;
+  }
+  .en {
+    display: block; margin-top: 4px;
+    font-family: var(--font-latin-display);
+    font-size: 9px; letter-spacing: 0.35em; color: var(--fg-dim);
+    text-transform: uppercase;
+  }
+
+  &:hover { color: var(--enso-fg); }
+  &.is-active {
+    color: var(--enso-gold);
+    border-bottom-color: var(--enso-gold);
+    .en { color: var(--enso-gold); }
+  }
+  @media (max-width: 560px) { flex: 1 0 33.333%; }
+}
+
+.enso-detail__tabpanel {
+  padding: 40px 4px 0;
+  animation: ensoFadeIn 0.4s var(--ease-enso, ease);
+}
+
+@keyframes ensoFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.enso-detail__richtext {
+  font-family: var(--font-serif-tc);
+  font-size: 15px; line-height: 2.1;
+  color: var(--fg-muted);
+  white-space: pre-line;
+  max-width: 760px;
+}
+
+.enso-detail__empty {
+  font-family: var(--font-serif-tc);
+  font-size: 14px; color: var(--fg-dim);
+}
+
+.enso-spec-list {
+  margin: 0; max-width: 760px;
+  > div {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 24px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line);
+    @media (max-width: 560px) { grid-template-columns: 110px 1fr; gap: 16px; }
+  }
+  dt {
+    margin: 0; color: var(--fg-muted);
+    font-family: var(--font-serif-jp);
+    font-size: 13px; letter-spacing: 0.15em;
+  }
+  dd {
+    margin: 0; color: var(--enso-fg);
+    font-family: var(--font-serif-tc);
+    font-size: 14px; line-height: 1.9;
+    white-space: pre-line;
+  }
+}

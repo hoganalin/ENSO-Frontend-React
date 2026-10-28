@@ -7,7 +7,6 @@ import useMessage from "../hooks/useMessage";
 import { getSingleProductApi } from "../services/product";
 import { createAsyncAddCart } from "../slice/cartSlice";
 import { currency } from "../assets/utils/filter";
-import { KanjiDivider } from "./atoms";
 import FavoriteButton from "./FavoriteButton";
 
 import type { AppDispatch } from "../store/store";
@@ -19,9 +18,17 @@ interface SingleProductProps {
 
 const FALLBACK_KANJI = "香";
 
+type TabKey = "features" | "specs" | "desc";
+const TABS: { key: TabKey; label: string; en: string }[] = [
+  { key: "features", label: "產品特色", en: "Features" },
+  { key: "specs", label: "產品規格", en: "Specifications" },
+  { key: "desc", label: "產品描述", en: "Description" },
+];
+
 function SingleProduct({ id }: SingleProductProps): JSX.Element {
   const [product, setProduct] = useState<Product>({} as Product);
   const [qty, setQty] = useState(1);
+  const [tab, setTab] = useState<TabKey>("features");
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { showSuccess, showError } = useMessage();
@@ -60,6 +67,21 @@ function SingleProduct({ id }: SingleProductProps): JSX.Element {
     setQty((prev) => Math.max(1, prev + delta));
   };
 
+  // ---- derive tab content with graceful fallbacks ----
+  const featuresText = (product.features || "").trim();
+  const descText = (product.content || product.description || "").trim();
+  const specItems =
+    product.specs && product.specs.length > 0
+      ? product.specs
+      : [
+          product.unit ? { label: "規格 / 容量", value: product.unit } : null,
+          product.inventory != null
+            ? { label: "庫存", value: `${product.inventory}` }
+            : null,
+        ].filter(Boolean) as { label: string; value: string }[];
+
+  const hasTabContent = featuresText || descText || specItems.length > 0;
+
   return (
     <div className="enso-detail">
       <div className="enso-detail__inner">
@@ -88,14 +110,12 @@ function SingleProduct({ id }: SingleProductProps): JSX.Element {
 
         {/* Right — info */}
         <div className="enso-detail__info" data-aos="fade-left" data-aos-delay={100}>
-          <div className="t-eyebrow">{product.category || "Incense"}</div>
+          <div className="t-eyebrow">{product.category || "Queen Maeve"}</div>
           <h1 className="enso-detail__title">{product.title}</h1>
           {product.vip_only && <p>VIP 金卡會員限定商品</p>}
           {product.available_at && <p>一般開放購買：{new Date(product.available_at).toLocaleString("zh-TW")}</p>}
           {product.vip_available_at && <p>VIP 金卡搶先購買：{new Date(product.vip_available_at).toLocaleString("zh-TW")}</p>}
-          <p className="enso-detail__sub">
-            {product.eng_title || "Premium Incense Series"}
-          </p>
+          {product.eng_title && <p className="enso-detail__sub">{product.eng_title}</p>}
 
           <div className="enso-detail__price">
             <span className="now">{currency(product.price)}</span>
@@ -104,61 +124,32 @@ function SingleProduct({ id }: SingleProductProps): JSX.Element {
             )}
           </div>
 
-          <p className="enso-detail__desc">{product.description}</p>
+          {product.description && <p className="enso-detail__desc">{product.description}</p>}
           {product.id && <FavoriteButton productId={product.id} />}
 
-          {/* Aroma profile */}
-          <div className="enso-detail__aroma">
-            <div className="t-eyebrow" style={{ marginBottom: 18 }}>Aroma · 香氣輪廓</div>
-            <div className="enso-aroma-graph">
-              {[
-                { label: "前調", en: "Top", value: product.top_smell },
-                { label: "中調", en: "Heart", value: product.heart_smell },
-                { label: "基調", en: "Base", value: product.base_smell },
-              ].map((note, i) => (
-                <div key={note.label} className="enso-aroma-graph__row">
-                  <div className="enso-aroma-graph__label">
-                    <span className="cn">{note.label}</span>
-                    <span className="en">{note.en}</span>
-                  </div>
-                  <div className="enso-aroma-graph__bar">
-                    <span style={{ width: `${[80, 60, 90][i]}%` }} />
-                  </div>
-                  <div className="enso-aroma-graph__value">{note.value || "—"}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Specs */}
-          <dl className="enso-detail__specs">
-            <div>
-              <dt>燃燒時間</dt>
-              <dd>{product.burning_time || "約 40 分鐘 / 支"}</dd>
-            </div>
-            <div>
-              <dt>香煙特性</dt>
-              <dd>{product.feature || "低煙配方"}</dd>
-            </div>
-            <div>
-              <dt>每盒數量</dt>
-              <dd>{product.unit ? `${product.unit}` : "20 支"}</dd>
-            </div>
-            <div>
-              <dt>庫存</dt>
-              <dd
-                style={
-                  product.inventory == null
-                    ? { color: "var(--fg-dim)" }
+          {/* Stock */}
+          <div className="enso-detail__stock">
+            <span>庫存狀態</span>
+            <span
+              style={
+                product.inventory == null
+                  ? { color: "var(--fg-dim)" }
+                  : product.inventory <= 0
+                    ? { color: "var(--vermillion)" }
                     : product.inventory < 5
                       ? { color: "var(--vermillion)" }
                       : undefined
-                }
-              >
-                {product.inventory != null ? `${product.inventory} 盒` : "缺貨"}
-              </dd>
-            </div>
-          </dl>
+              }
+            >
+              {product.inventory == null
+                ? "—"
+                : product.inventory <= 0
+                  ? "已售完"
+                  : product.inventory < 5
+                    ? `僅剩 ${product.inventory} 件`
+                    : "現貨供應"}
+            </span>
+          </div>
 
           {/* Purchase */}
           <div className="enso-detail__purchase">
@@ -189,32 +180,64 @@ function SingleProduct({ id }: SingleProductProps): JSX.Element {
           >
             前往購物車
           </button>
-
-          <p className="enso-detail__notice">
-            滿 NT$ 800 免運 · 京都直送 · 2–3 個工作天到貨
-          </p>
         </div>
       </div>
 
-      {/* Experience */}
-      <section className="enso-detail__experience">
-        <div className="enso-detail__experience-inner">
-          <KanjiDivider kanji="香" />
-          <div className="t-eyebrow" style={{ textAlign: "center", marginTop: 24 }}>
-            The Scent Experience
-          </div>
-          <h2 className="enso-detail__experience-title">香氣體驗</h2>
-          <p className="enso-detail__experience-copy">{product.content}</p>
-
-          {product.scenes && product.scenes.length > 0 && (
-            <ul className="enso-detail__scenes">
-              {product.scenes.map((scene) => (
-                <li key={scene}>{scene}</li>
+      {/* Product detail tabs — 產品特色 / 產品規格 / 產品描述 */}
+      {hasTabContent && (
+        <section className="enso-detail__tabs-section">
+          <div className="enso-detail__tabs-inner">
+            <div className="enso-detail__tablist" role="tablist" aria-label="產品資訊">
+              {TABS.map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === t.key}
+                  className={`enso-detail__tab${tab === t.key ? " is-active" : ""}`}
+                  onClick={() => setTab(t.key)}
+                >
+                  <span className="cn">{t.label}</span>
+                  <span className="en">{t.en}</span>
+                </button>
               ))}
-            </ul>
-          )}
-        </div>
-      </section>
+            </div>
+
+            <div className="enso-detail__tabpanel" role="tabpanel">
+              {tab === "features" && (
+                featuresText ? (
+                  <div className="enso-detail__richtext">{featuresText}</div>
+                ) : (
+                  <p className="enso-detail__empty">尚未提供產品特色。</p>
+                )
+              )}
+
+              {tab === "specs" && (
+                specItems.length > 0 ? (
+                  <dl className="enso-spec-list">
+                    {specItems.map((it, i) => (
+                      <div key={`${it.label}-${i}`}>
+                        <dt>{it.label}</dt>
+                        <dd>{it.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : (
+                  <p className="enso-detail__empty">尚未提供產品規格。</p>
+                )
+              )}
+
+              {tab === "desc" && (
+                descText ? (
+                  <div className="enso-detail__richtext">{descText}</div>
+                ) : (
+                  <p className="enso-detail__empty">尚未提供產品描述。</p>
+                )
+              )}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
