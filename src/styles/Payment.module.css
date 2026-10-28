@@ -38,3 +38,13 @@
 .checkout :global(.order-item) > :first-child { overflow-wrap: anywhere; min-width: 0; }
 .checkout :global(.order-item) > :last-child { flex-shrink: 0; }
 .checkout :global(.total) { border-top: 1px solid #8b795c; margin-top: .5rem; }
+
+/* ── TapPay 信用卡表單 ───────────────────────────── */
+.tappayBox { margin: 1.25rem 0; display: flex; flex-direction: column; gap: 1rem; }
+.tappayField { display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
+.tappayField > label { font-size: .82rem; letter-spacing: .1em; color: var(--enso-gold-soft, #d9b680); }
+.tappayInput { height: 2.9rem; padding: 0 .85rem; display: flex; align-items: center; background: var(--enso-ink, #1a1d1b); border: 1px solid var(--line-strong, #a8864d); border-radius: .25rem; box-sizing: border-box; }
+.tappayRow { display: flex; gap: 1rem; }
+.tappayRow .tappayField { flex: 1; }
+.tappayPaid { border-left: 3px solid #8fc08f; padding: .75rem; background: var(--enso-ink, #1a1d1b); color: #8fc08f; }
+.tappayNote { font-size: .76rem; color: var(--fg-dim, #9a8f7a); margin: .25rem 0 0; }

@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router";
 import { requireAuth } from "@/lib/supabase-auth";
 import { listMyOrders, listOrderItems } from "@/services/db/orders";
 import type { OrderItemRow, OrderRow } from "@/services/db/types";
-import { startEcpayPayment } from "@/services/payment/client";
+import TapPayCardForm from "@/components/TapPayCardForm";
 import OrderGifts from "@/components/OrderGifts";
 import RefundRequest from "@/components/RefundRequest";
 import styles from "@/styles/Payment.module.css";
@@ -16,8 +16,7 @@ export default function PaymentPage() {
   const [items, setItems] = useState<OrderItemRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [paying, setPaying] = useState(false);
-  const busy = useRef(false);
+  const [justPaid, setJustPaid] = useState(false);
   const mounted = useRef(true);
   const requestId = useRef(0);
   const refresh = useCallback(async () => {
@@ -37,23 +36,10 @@ export default function PaymentPage() {
   useEffect(() => { mounted.current = true; void refresh(); return () => { mounted.current = false; requestId.current++; }; }, [refresh]);
 
   const order = orders.find((row) => row.id === orderId);
-  const pay = async () => {
-    if (!order || order.status !== "pending" || busy.current) return;
-    busy.current = true;
-    setPaying(true);
-    setError(null);
-    try {
-      // Only the trusted payment service may decide whether this order can be paid.
-      await startEcpayPayment(order.id);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "無法開始付款，請稍後再試");
-      busy.current = false;
-      setPaying(false);
-    }
-  };
+  const handlePaid = () => { setJustPaid(true); void refresh(); };
 
   return <main className={styles.paymentContainer}>
-    <section className={styles.paymentCard} aria-busy={loading || paying}>
+    <section className={styles.paymentCard} aria-busy={loading}>
       <h1>{orderId ? "訂單付款" : "我的訂單"}</h1>
       {loading ? <p role="status">正在讀取訂單…</p> : <>
         {orderId && !order && !error && <p role="alert">找不到可存取的訂單，請確認登入帳號及訂單網址。</p>}
@@ -71,9 +57,10 @@ export default function PaymentPage() {
               <span>NT${(item.unit_price * item.qty).toLocaleString()}</span>
             </li>)}</ul>
           </section>}
+          {justPaid && order.status === "paid" && <p className={styles.tappayPaid} role="status">付款成功，感謝您的購買！</p>}
           {order.status === "pending" ? <>
-            <p>付款由綠界處理。若您剛完成付款，請先更新訂單狀態；付款確認可能需要片刻。</p>
-            <button className={styles.primaryBtn} disabled={paying} onClick={pay}>{paying ? "正在前往綠界…" : "前往綠界付款"}</button>
+            <p>請輸入信用卡資訊完成付款：</p>
+            <TapPayCardForm orderId={order.id} amount={order.total} onPaid={handlePaid} />
           </> : <p>{["paid", "shipped", "completed"].includes(order.status) ? "此訂單已完成付款，無需再次支付。" : "此訂單無法付款。"}</p>}
           <OrderGifts key={`gifts-${order.id}`} orderId={order.id} />
           <RefundRequest key={order.id} orderId={order.id} total={order.total} eligible={["paid", "shipped", "completed"].includes(order.status)} />
@@ -85,12 +72,10 @@ export default function PaymentPage() {
         {error && <p className={styles.errorDetails} role="alert">{error}</p>}
       </>}
       <div className={styles.actions}>
-        <button className={styles.secondaryBtn} disabled={loading || paying} onClick={() => void refresh()}>更新訂單狀態</button>
+        <button className={styles.secondaryBtn} disabled={loading} onClick={() => void refresh()}>更新訂單狀態</button>
         {orderId && <Link className={styles.secondaryBtn} to="/orders">我的訂單</Link>}
         <Link className={styles.secondaryBtn} to="/product">繼續購物</Link>
       </div>
     </section>
   </main>;
 }
-
-

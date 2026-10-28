@@ -1,16 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { Link, MemoryRouter, Route, Routes } from "react-router";
 import PaymentPage from "@/pages/PaymentPage";
-const { auth, list, pay, items, refund } = vi.hoisted(() => ({auth:vi.fn(),list:vi.fn(),pay:vi.fn(),items:vi.fn(),refund:vi.fn()}));
+const { auth, list, items, refund } = vi.hoisted(() => ({auth:vi.fn(),list:vi.fn(),items:vi.fn(),refund:vi.fn()}));
 vi.mock("@/components/OrderGifts",()=>({default:()=>null}));
+// TapPay 的刷卡欄位需要外部 SDK（jsdom 載不了），這裡用 stub 取代，專注測頁面邏輯。
+vi.mock("@/components/TapPayCardForm",()=>({default:({amount,onPaid}:{amount:number;onPaid:()=>void})=>(
+  <button type="button" onClick={onPaid}>{`確認付款 NT$${amount.toLocaleString()}`}</button>
+)}));
 vi.mock("@/lib/supabase-auth",()=>({requireAuth:auth}));
 vi.mock("@/services/db/orders",()=>({listMyOrders:list,listOrderItems:items,requestFullRefund:refund}));
 vi.mock("@/lib/supabase",()=>({supabase:{from:()=>({select:()=>({eq:()=>({order:()=>Promise.resolve({data:[],error:null})})})}),rpc:refund}}));
-vi.mock("@/services/payment/client",()=>({startEcpayPayment:pay}));
 const order = {id:"order-1",order_no:"ENSO-1",total:1080,status:"pending"};
 const show = () => render(<MemoryRouter initialEntries={["/payment/order-1"]}><Routes><Route path="/payment/:orderId" element={<PaymentPage/>}/></Routes></MemoryRouter>);
-beforeEach(()=>{vi.clearAllMocks();auth.mockResolvedValue("buyer");list.mockResolvedValue([order]);items.mockResolvedValue([]);pay.mockRejectedValue(new Error("付款暫時無法連線"));});
+beforeEach(()=>{vi.clearAllMocks();auth.mockResolvedValue("buyer");list.mockResolvedValue([order]);items.mockResolvedValue([]);});
 afterEach(cleanup);
 describe("payment page",()=>{
   it("submits the paid order's full amount and reason for review",async()=>{
@@ -42,23 +45,20 @@ describe("payment page",()=>{
     expect(section).toHaveTextContent("NT$1,080");
     expect(items).toHaveBeenCalledWith("order-1");
   });
-  it("reads the authenticated buyer and can retry a failed payment request",async()=>{
-    show();fireEvent.click(await screen.findByRole("button",{name:"前往綠界付款"}));
-    expect(await screen.findByRole("alert")).toHaveTextContent("付款暫時無法連線");
-    expect(list).toHaveBeenCalledWith("buyer");expect(pay).toHaveBeenCalledWith("order-1");
-    fireEvent.click(screen.getByRole("button",{name:"前往綠界付款"}));
-    await waitFor(()=>expect(pay).toHaveBeenCalledTimes(2));
+  it("offers the TapPay credit-card form for a pending order",async()=>{
+    show();
+    expect(await screen.findByRole("button",{name:"確認付款 NT$1,080"})).toBeInTheDocument();
+    expect(list).toHaveBeenCalledWith("buyer");
   });
   it.each(["paid","shipped","completed","cancelled","refunded"])("cannot pay a %s order",async(status)=>{
     list.mockResolvedValue([{...order,status}]);show();await screen.findByText("訂單編號：ENSO-1");
-    expect(screen.queryByRole("button",{name:"前往綠界付款"})).not.toBeInTheDocument();
+    expect(screen.queryByRole("button",{name:/確認付款/})).not.toBeInTheDocument();
   });
   it("does not fetch orders before authentication succeeds",async()=>{
     auth.mockRejectedValue(new Error("請先登入"));show();expect(await screen.findByRole("alert")).toHaveTextContent("請先登入");expect(list).not.toHaveBeenCalled();
   });
   it("does not offer payment for an inaccessible order",async()=>{
-    list.mockResolvedValue([]);show();expect(await screen.findByRole("alert")).toHaveTextContent("找不到可存取的訂單");expect(pay).not.toHaveBeenCalled();
+    list.mockResolvedValue([]);show();expect(await screen.findByRole("alert")).toHaveTextContent("找不到可存取的訂單");
+    expect(screen.queryByRole("button",{name:/確認付款/})).not.toBeInTheDocument();
   });
 });
-
-
