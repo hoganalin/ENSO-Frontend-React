@@ -248,13 +248,13 @@ export const demoPromos: Promo[] = [
   },
   {
     id: "FREESHIP",
-    name: "滿 NT$1,500 免運",
+    name: "滿 NT$3,000 免運",
     kind: "滿額免運",
     auto: true,
     group: "shipping",
     priority: 10,
-    when: (c) => subtotalOf(c) >= 1500,
-    effect: () => ({ freeShip: true, label: "滿 1,500 免運" }),
+    when: (c) => subtotalOf(c) >= 3000,
+    effect: () => ({ freeShip: true, label: "滿 3,000 免運" }),
   },
   {
     id: "GIFT3000",

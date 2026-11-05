@@ -11,7 +11,7 @@ import {
 } from "./promotions.ts";
 import type { MemberTier } from "./promotions.ts";
 
-export const SHIPPING_BASE = 80;
+export const SHIPPING_BASE = 150;
 
 export interface CheckoutItem {
   productId: string;

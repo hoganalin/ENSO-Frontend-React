@@ -9,7 +9,7 @@ import {
 } from "@/domain/promotions";
 import type { MemberTier } from "@/domain/storeCredit";
 
-const shipping = { shippingBase: 80, couponStacksOrder: true };
+const shipping = { shippingBase: 150, couponStacksOrder: true };
 const promo = (id: string): Promo => demoPromos.find((p) => p.id === id)!;
 
 // 購物車小工具：p1=1280、p2=880、p3=2400
@@ -26,8 +26,8 @@ describe("applyPromotions — 基本與自動活動", () => {
     const r = applyPromotions(cart([["p1", 1]]), [], shipping);
     expect(r.subtotal).toBe(1280);
     expect(r.applied).toHaveLength(0);
-    expect(r.shippingFee).toBe(80);
-    expect(r.total).toBe(1360);
+    expect(r.shippingFee).toBe(150);
+    expect(r.total).toBe(1430);
   });
 
   it("跨過門檻時，滿額折/免運/贈自動觸發", () => {
