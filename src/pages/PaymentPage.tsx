@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useParams, useSearchParams } from "react-router";
 import { requireAuth } from "@/lib/supabase-auth";
 import { listMyOrders, listOrderItems } from "@/services/db/orders";
 import type { OrderItemRow, OrderRow } from "@/services/db/types";
 import TapPayCardForm from "@/components/TapPayCardForm";
+import { payWithLinePay } from "@/services/payment/tappay";
 import OrderGifts from "@/components/OrderGifts";
 import RefundRequest from "@/components/RefundRequest";
 import styles from "@/styles/Payment.module.css";
@@ -12,11 +13,15 @@ const labels: Record<string, string> = { pending: "待付款", paid: "已付款"
 
 export default function PaymentPage() {
   const { orderId } = useParams<{ orderId: string }>();
+  const [searchParams] = useSearchParams();
+  const fromLinePay = searchParams.get("pay") === "linepay";
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [items, setItems] = useState<OrderItemRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [justPaid, setJustPaid] = useState(false);
+  const [linePaying, setLinePaying] = useState(false);
+  const [linePayError, setLinePayError] = useState<string | null>(null);
   const mounted = useRef(true);
   const requestId = useRef(0);
   const refresh = useCallback(async () => {
@@ -37,6 +42,26 @@ export default function PaymentPage() {
 
   const order = orders.find((row) => row.id === orderId);
   const handlePaid = () => { setJustPaid(true); void refresh(); };
+  const handleLinePay = async () => {
+    if (linePaying || !order) return;
+    setLinePaying(true); setLinePayError(null);
+    try {
+      await payWithLinePay(order.id); // 成功會跳轉到 LINE Pay，不會回到這裡
+    } catch (err) {
+      setLinePayError(err instanceof Error ? err.message : "LINE Pay 付款失敗，請稍後再試");
+      setLinePaying(false);
+    }
+  };
+
+  // 從 LINE Pay 導回後，付款入帳是非同步的（webhook）。若訂單仍為待付款，自動重試幾次。
+  const linePayPolls = useRef(0);
+  useEffect(() => {
+    if (!fromLinePay || loading) return;
+    if (order && order.status === "pending" && linePayPolls.current < 4) {
+      const t = setTimeout(() => { linePayPolls.current += 1; void refresh(); }, 2500);
+      return () => clearTimeout(t);
+    }
+  }, [fromLinePay, loading, order, refresh]);
 
   return <main className={styles.paymentContainer}>
     <section className={styles.paymentCard} aria-busy={loading}>
@@ -57,10 +82,17 @@ export default function PaymentPage() {
               <span>NT${(item.unit_price * item.qty).toLocaleString()}</span>
             </li>)}</ul>
           </section>}
-          {justPaid && order.status === "paid" && <p className={styles.tappayPaid} role="status">付款成功，感謝您的購買！</p>}
+          {((justPaid && order.status === "paid")) && <p className={styles.tappayPaid} role="status">付款成功，感謝您的購買！</p>}
           {order.status === "pending" ? <>
-            <p>請輸入信用卡資訊完成付款：</p>
+            {fromLinePay && <p className={styles.tappayNote} role="status">LINE Pay 付款確認中…若已於 LINE 完成付款，請稍候或按下方「更新訂單狀態」。</p>}
+            <p>請選擇付款方式：</p>
+            <h2 style={{ fontSize: "1.1rem", marginTop: "1rem" }}>信用卡</h2>
             <TapPayCardForm orderId={order.id} amount={order.total} onPaid={handlePaid} />
+            <div className={styles.payDivider}><span>或</span></div>
+            <button type="button" className={styles.linePayBtn} disabled={linePaying} onClick={handleLinePay}>
+              {linePaying ? "前往 LINE Pay…" : "使用 LINE Pay 付款"}
+            </button>
+            {linePayError && <p className={styles.errorDetails} role="alert">{linePayError}</p>}
           </> : <p>{["paid", "shipped", "completed"].includes(order.status) ? "此訂單已完成付款，無需再次支付。" : "此訂單無法付款。"}</p>}
           <OrderGifts key={`gifts-${order.id}`} orderId={order.id} />
           <RefundRequest key={order.id} orderId={order.id} total={order.total} eligible={["paid", "shipped", "completed"].includes(order.status)} />

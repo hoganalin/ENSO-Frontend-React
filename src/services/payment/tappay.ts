@@ -1,11 +1,9 @@
-// src/services/payment/tappay.ts — TapPay 前端付款（信用卡）
+// src/services/payment/tappay.ts — TapPay 前端付款（信用卡 + LINE Pay）
 //
-// 前端只做兩件事：
-//   1. 用 App ID / App Key 載入 TapPay SDK、渲染刷卡欄位、取得一次性 prime。
-//   2. 把 prime + orderId 交給 tappay-pay Edge Function，由後端扣款。
-// 卡號只存在 TapPay 的 iframe 裡，永遠不會進到我們的程式或伺服器。
+// 前端只負責：用 App ID / App Key 載入 SDK、取得一次性 prime、交給 tappay-pay。
+// 卡號只存在 TapPay 的 iframe，永遠不進我方程式或伺服器。
 //
-// 需要的環境變數（前端，建置時注入；App ID/App Key 本來就會曝露給瀏覽器）：
+// 環境變數（前端，建置時注入）：
 //   VITE_TAPPAY_APP_ID   TapPay App ID（數字）
 //   VITE_TAPPAY_APP_KEY  TapPay App Key
 //   VITE_TAPPAY_ENV      sandbox | production（預設 sandbox）
@@ -28,12 +26,20 @@ interface TappayPrimeResult {
   msg: string;
   card: { prime: string };
 }
+interface TappayLinePayResult {
+  status: number;
+  msg?: string;
+  prime: string;
+}
 interface TPDirect {
   setupSDK(appId: number, appKey: string, serverType: "sandbox" | "production"): void;
   card: {
     setup(config: unknown): void;
     getTappayFieldsStatus(): TappayFieldsStatus;
     getPrime(cb: (result: TappayPrimeResult) => void): void;
+  };
+  linePay?: {
+    getPrime(cb: (result: TappayLinePayResult) => void): void;
   };
 }
 declare global {
@@ -90,14 +96,13 @@ export async function setupCardFields(
     },
     styles: {
       input: { color: "#f5eee0", "font-size": "16px", "font-family": "inherit" },
-      "input.ccv": { "font-size": "16px" },
       ".valid": { color: "#8fc08f" },
       ".invalid": { color: "#e07a5f" },
     },
   });
 }
 
-/** 取得一次性付款憑證 prime；欄位不完整會丟出可顯示的錯誤。 */
+/** 取得信用卡一次性 prime；欄位不完整會丟出可顯示的錯誤。 */
 export function getPrime(): Promise<string> {
   const tappay = window.TPDirect;
   return new Promise<string>((resolve, reject) => {
@@ -125,9 +130,11 @@ interface ApiErrorBody {
 }
 interface TappayPayResponse {
   success: boolean;
-  orderNo: string;
-  recTradeId: string;
-  amount: number;
+  method?: string;
+  orderNo?: string;
+  recTradeId?: string;
+  amount?: number;
+  paymentUrl?: string;
 }
 
 async function toPaymentError(error: unknown): Promise<PaymentError> {
@@ -148,16 +155,53 @@ async function toPaymentError(error: unknown): Promise<PaymentError> {
   );
 }
 
-/** 把 prime 交給後端扣款。成功回傳訂單編號與 TapPay 交易序號。 */
+/** 信用卡：把 prime 交給後端扣款。成功回傳訂單編號與交易序號。 */
 export async function payWithTappay(
   orderId: string,
   prime: string,
 ): Promise<{ orderNo: string; recTradeId: string }> {
   if (!orderId) throw new PaymentError("invalid_order_id", "缺少訂單編號");
   const { data, error } = await supabase.functions.invoke<TappayPayResponse>("tappay-pay", {
-    body: { orderId, prime },
+    body: { orderId, prime, method: "card" },
   });
   if (error) throw await toPaymentError(error);
   if (!data?.success) throw new PaymentError("invalid_response", "付款服務回應格式異常");
-  return { orderNo: data.orderNo, recTradeId: data.recTradeId };
+  return { orderNo: data.orderNo ?? "", recTradeId: data.recTradeId ?? "" };
+}
+
+/** 取得 LINE Pay 一次性 prime。 */
+function getLinePayPrime(): Promise<string> {
+  const tappay = window.TPDirect;
+  return new Promise<string>((resolve, reject) => {
+    if (!tappay?.linePay) {
+      reject(new PaymentError("sdk_unavailable", "LINE Pay 付款元件無法使用"));
+      return;
+    }
+    tappay.linePay.getPrime((result) => {
+      if (result.status !== 0) {
+        reject(new PaymentError("get_prime_failed", result.msg || "取得 LINE Pay 付款憑證失敗"));
+        return;
+      }
+      resolve(result.prime);
+    });
+  });
+}
+
+/**
+ * LINE Pay：取得 prime → 後端建立交易並回傳 payment_url → 轉導到 LINE Pay。
+ * 付款完成後 LINE 會把使用者導回 /payment/:orderId?pay=linepay，
+ * 實際入帳由 tappay-notify webhook 查證後完成。成功時本函式不會 return（頁面已跳轉）。
+ */
+export async function payWithLinePay(orderId: string): Promise<void> {
+  if (!orderId) throw new PaymentError("invalid_order_id", "缺少訂單編號");
+  await ensureSetup();
+  const prime = await getLinePayPrime();
+  const { data, error } = await supabase.functions.invoke<TappayPayResponse>("tappay-pay", {
+    body: { orderId, prime, method: "linepay" },
+  });
+  if (error) throw await toPaymentError(error);
+  if (!data?.success || !data.paymentUrl) {
+    throw new PaymentError("invalid_response", "LINE Pay 啟動失敗，請稍後再試");
+  }
+  window.location.href = data.paymentUrl;
 }
