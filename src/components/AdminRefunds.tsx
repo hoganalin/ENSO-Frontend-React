@@ -101,16 +101,21 @@ export default function AdminRefunds(): JSX.Element {
     return () => { active = false; };
   }, []);
 
-  // 執行退款（更新 status → refunded）
+  // 執行退款：走後端 edge function（service_role 完成全額退款 + 回沖推薦金 + 退還買家購物金）
   async function handleRefund(orderId: string): Promise<void> {
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, processing: true } : o));
     setConfirmId(null);
-    const { error: err } = await supabase
-      .from("orders")
-      .update({ status: "refunded" })
-      .eq("id", orderId);
+    setError(null);
+    const { error: err } = await supabase.functions.invoke("admin-order-action", {
+      body: { action: "full_refund", orderId },
+    });
     if (err) {
-      setError(err.message);
+      let msg = "退款失敗";
+      try {
+        const b = await (err as { context?: Response }).context?.json();
+        if (b?.error?.message) msg = b.error.message;
+      } catch { /* keep fallback */ }
+      setError(msg);
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, processing: false } : o));
     } else {
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: "refunded", processing: false } : o));
@@ -241,7 +246,7 @@ export default function AdminRefunds(): JSX.Element {
           </div>
 
           <p className={styles.muted} style={{ marginTop: "1rem", fontSize: ".8rem" }}>
-            ⚠️ 執行退款僅更新系統狀態，實際款項請透過 ECPay 後台或銀行端操作退款。
+            ⚠️ 執行退款僅更新系統狀態，實際款項請透過 TapPay 後台或銀行端操作退款。
           </p>
         </>
       )}

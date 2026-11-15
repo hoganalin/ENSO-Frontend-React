@@ -6,6 +6,7 @@
 export interface TappayConfig {
   partnerKey: string;
   merchantId: string;
+  lineMerchantId: string;
   isProduction: boolean;
   apiBase: string;
 }
@@ -13,6 +14,7 @@ export interface TappayConfig {
 export function loadTappayConfig(): TappayConfig {
   const partnerKey = Deno.env.get("TAPPAY_PARTNER_KEY") ?? "";
   const merchantId = Deno.env.get("TAPPAY_MERCHANT_ID") ?? "";
+  const lineMerchantId = Deno.env.get("TAPPAY_MERCHANT_ID_LINEPAY") ?? merchantId;
   const env = (Deno.env.get("TAPPAY_ENV") ?? "sandbox").toLowerCase();
   if (!partnerKey || !merchantId) {
     throw new Error("[tappay] 缺少 TAPPAY_PARTNER_KEY 或 TAPPAY_MERCHANT_ID");
@@ -21,7 +23,7 @@ export function loadTappayConfig(): TappayConfig {
   const apiBase = isProduction
     ? "https://prod.tappaysdk.com"
     : "https://sandbox.tappaysdk.com";
-  return { partnerKey, merchantId, isProduction, apiBase };
+  return { partnerKey, merchantId, lineMerchantId, isProduction, apiBase };
 }
 
 export interface PayByPrimeInput {
@@ -135,5 +137,54 @@ export async function queryTransaction(
     amount: typeof rec.amount === "number" ? (rec.amount as number) : 0,
     orderNumber: String(rec.order_number ?? ""),
     raw: rec,
+  };
+}
+
+export interface RefundResult {
+  status: number; // 0 = 退款受理成功
+  msg: string;
+  refundId: string;
+  refundAmount: number;
+  isCaptured: boolean;
+  raw: Record<string, unknown>;
+}
+
+/**
+ * 以 rec_trade_id 向 TapPay 申請退款（/tpc/transaction/refund）。
+ * 不帶 amount = 全額退款；帶 amount = 部分退款（分期交易不支援部分退款）。
+ * 沙盒 / 正式由 cfg.apiBase 決定（TAPPAY_ENV）。
+ */
+export async function refundTransaction(
+  cfg: TappayConfig,
+  recTradeId: string,
+  amount?: number,
+): Promise<RefundResult> {
+  const body: Record<string, unknown> = {
+    partner_key: cfg.partnerKey,
+    rec_trade_id: recTradeId,
+  };
+  if (typeof amount === "number" && amount > 0) body.amount = amount;
+
+  const res = await fetch(`${cfg.apiBase}/tpc/transaction/refund`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-api-key": cfg.partnerKey },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(30_000),
+  });
+
+  let data: Record<string, unknown> = {};
+  try {
+    data = (await res.json()) as Record<string, unknown>;
+  } catch {
+    data = { status: -1, msg: `TapPay 退款回應解析失敗 (HTTP ${res.status})` };
+  }
+
+  return {
+    status: typeof data.status === "number" ? (data.status as number) : -1,
+    msg: String(data.msg ?? "unknown"),
+    refundId: String(data.refund_id ?? ""),
+    refundAmount: typeof data.refund_amount === "number" ? (data.refund_amount as number) : 0,
+    isCaptured: data.is_captured === true,
+    raw: data,
   };
 }
