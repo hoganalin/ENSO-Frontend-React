@@ -10,12 +10,10 @@ import { logout as logoutAction } from "../slice/authSlice";
 import { createAsyncGetCart } from "../slice/cartSlice";
 
 const NAV_ITEMS = [
-  { href: "/", label: "本店", sub: "ほんてん", kanji: "本" },
-  { href: "/product", label: "線香", sub: "せんこう", kanji: "香" },
-  { href: "/offers", label: "活動", sub: "お知らせ", kanji: "禮" },
-  { href: "/journal", label: "香誌", sub: "こうし", kanji: "誌" },
-  { href: "/stores", label: "店舖", sub: "てんぽ", kanji: "店" },
-  { href: "/about", label: "品牌", sub: "ぶらんど", kanji: "縁" },
+  { href: "/", label: "首頁", sub: "Home", kanji: "✦" },
+  { href: "/product", label: "全部商品", sub: "Shop", kanji: "✦" },
+  { href: "/offers", label: "活動", sub: "Offers", kanji: "✦" },
+  { href: "/about", label: "品牌故事", sub: "About", kanji: "✦" },
 ];
 
 function Header(): JSX.Element {
@@ -33,6 +31,12 @@ function Header(): JSX.Element {
   );
   const cartTotalQty =
     carts?.reduce((acc, curr) => acc + (curr.qty || 0), 0) || 0;
+
+  const role = useSelector(
+    (state: RootState) => (state.auth.user as { profile?: { role?: string } } | null)?.profile?.role,
+  );
+  const isStaff =
+    isLoggedIn && !!role && ["admin", "finance", "warehouse", "support", "marketing"].includes(role);
 
   useEffect(() => {
     dispatch(createAsyncGetCart());
@@ -99,7 +103,7 @@ function Header(): JSX.Element {
 
       <header className="enso-header">
         <div className="enso-header__inner">
-          <Link className="enso-header__brand" to="/" aria-label="ENSO Home">
+          <Link className="enso-header__brand" to="/" aria-label="Queen Maeve Home">
             <svg
               className="enso-header__brand-circle"
               viewBox="0 0 40 40"
@@ -114,8 +118,8 @@ function Header(): JSX.Element {
               />
             </svg>
             <span className="enso-header__brand-text">
-              <span className="enso-header__brand-mark">ENSO</span>
-              <span className="enso-header__brand-sub">圓相 · 香</span>
+              <span className="enso-header__brand-mark">Queen Maeve</span>
+              <span className="enso-header__brand-sub">王后美芙</span>
             </span>
           </Link>
 
@@ -155,6 +159,10 @@ function Header(): JSX.Element {
               </form>
             </details>
 
+            {isStaff && <Link to="/admin" className="enso-header__icon-btn" aria-label="後台管理"
+              onClick={() => setNavLoadingLabel("前往後台…")}>
+              <i className="fa-solid fa-gauge-high" /><span className="label">後台</span>
+            </Link>}
             {isLoggedIn && <Link to="/member" className="enso-header__icon-btn" aria-label="會員中心"
               onClick={() => setNavLoadingLabel("前往會員中心…")}>
               <i className="bi bi-person-circle" /><span className="label">會員</span>
@@ -218,6 +226,15 @@ function Header(): JSX.Element {
                 </Link>
               );
             })}
+            {isStaff && (
+              <Link
+                to="/admin"
+                className="enso-header__nav-link"
+                onClick={() => setNavLoadingLabel("前往後台…")}
+              >
+                後台管理
+              </Link>
+            )}
           </nav>
         </div>
       </header>

@@ -2,31 +2,23 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import MemberShell from "@/components/MemberShell";
 import { useMember } from "@/hooks/useMember";
-import { supabase } from "@/lib/supabase";
+import { getBalance } from "@/services/db/storeCredit";
 import styles from "@/styles/Member.module.css";
 
 function useCreditBalance(memberId: string | undefined) {
   const [balance, setBalance] = useState<number | null>(null);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
+    setBalance(null); setError(false);
     if (!memberId) return;
     let active = true;
-    supabase
-      .from("store_credit_ledger")
-      .select("type,amount")
-      .eq("member_id", memberId)
-      .then(({ data }) => {
-        if (!active || !data) return;
-        const bal = data.reduce((s, r) => {
-          if (r.type === "earn")   return s + (r.amount ?? 0);
-          if (r.type === "spend")  return s - Math.abs(r.amount ?? 0);
-          if (r.type === "expire") return s - Math.abs(r.amount ?? 0);
-          return s;
-        }, 0);
-        setBalance(Math.max(0, bal));
-      });
+    getBalance(memberId)
+      .then(value => { if (active) setBalance(Math.max(0, value)); })
+      .catch(() => { if (active) setError(true); });
     return () => { active = false; };
-  }, [memberId]);
-  return balance;
+  }, [memberId, attempt]);
+  return { balance, error, retry: () => setAttempt(n => n + 1) };
 }
 
 const TIER_LABEL: Record<string, string> = {
@@ -38,7 +30,7 @@ const TIER_COLOR: Record<string, string> = {
 
 export default function MemberPage() {
   const { profile, loading, error, retry } = useMember();
-  const balance = useCreditBalance(profile?.id);
+  const credit = useCreditBalance(profile?.id);
 
   return (
     <MemberShell title="會員中心">
@@ -65,6 +57,20 @@ export default function MemberPage() {
             </span>
           </div>
 
+          {/* 員工／管理員：進入後台入口 */}
+          {!!profile.role && ["admin", "finance", "warehouse", "support", "marketing"].includes(profile.role) && (
+            <Link
+              to="/admin"
+              className={styles.button}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem",
+                background: "var(--enso-gold,#c9a063)", color: "#1a1d1b", fontWeight: 700, textDecoration: "none",
+              }}
+            >
+              進入後台管理 →
+            </Link>
+          )}
+
           {/* 購物金餘額卡 */}
           <div className={styles.card} style={{ marginBottom: "1.25rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
@@ -74,16 +80,17 @@ export default function MemberPage() {
                   margin: 0, fontSize: "2rem", fontWeight: 700, fontVariantNumeric: "tabular-nums",
                   color: "var(--enso-gold,#c9a063)", letterSpacing: "-.02em",
                 }}>
-                  {balance === null ? "—" : `NT$ ${balance.toLocaleString("zh-TW")}`}
+                  {credit.error ? "暫時無法取得" : credit.balance === null ? "讀取中…" : `NT$ ${credit.balance.toLocaleString("zh-TW")}`}
                 </p>
+                {credit.error && <div role="alert"><p>購物金讀取失敗，請重試。</p><button className={styles.button} onClick={credit.retry}>重新讀取購物金</button></div>}
                 {profile.member_tier !== "normal" && (
                   <p style={{ margin: "4px 0 0", fontSize: ".78rem", opacity: .6 }}>
-                    消費完成後自動回饋 {profile.member_tier === "silver" ? "10%" : "20%"} 購物金
+                    推薦訂單完成後依有效會員等級與回饋設定發放購物金。
                   </p>
                 )}
               </div>
               <Link className={styles.button} to="/orders" style={{ fontSize: ".85rem" }}>
-                查看購物金明細 →
+                查看我的訂單 →
               </Link>
             </div>
           </div>
