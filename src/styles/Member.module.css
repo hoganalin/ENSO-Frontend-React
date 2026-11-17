@@ -11,10 +11,11 @@
 .actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
 .button { display: inline-block; min-height: 2.75rem; padding: .65rem 1rem; border: 1px solid var(--enso-gold, #c9a063); border-radius: .25rem; background: transparent; color: var(--enso-fg, #f5eee0); text-decoration: none; }
 .button:disabled { opacity: .6; cursor: wait; }
-.page :is(a, button):focus-visible { outline: 3px solid var(--enso-gold, #c9a063); outline-offset: 3px; }
+.page :is(a, button, input, textarea, select, summary):focus-visible { outline: 3px solid var(--enso-gold, #c9a063); outline-offset: 3px; }
+.page input { max-width: 100%; min-height: 2.75rem; }
 .error { border-left: 3px solid var(--enso-gold, #c9a063); padding: 1rem; margin: 1rem 0; background: var(--enso-ink, #1a1d1b); }
 .product { display: flex; gap: 1rem; align-items: center; }
-.product img { width: 5rem; aspect-ratio: 1; object-fit: cover; }
+.product img { width: 5rem; flex-shrink: 0; aspect-ratio: 1; object-fit: cover; }
 .product > div { min-width: 0; flex: 1; }
 .details { margin-top: 1rem; }
 .details summary { cursor: pointer; padding: .5rem 0; }

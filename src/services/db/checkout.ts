@@ -43,6 +43,8 @@ export interface PlaceOrderParams {
   couponCode?: string | null;
   recipient: { name: string; email: string; tel: string; address: string };
   memberContext?: MemberContext;
+  /** 使用者要折抵的購物金；伺服器端會依餘額與未付訂單預留重新夾限。 */
+  creditUsed?: number;
 }
 
 /** Browser supplies quantities and recipient only. Identity/prices/promotions are resolved on the server. */
@@ -53,6 +55,7 @@ export async function placeOrder(params: PlaceOrderParams): Promise<OrderRow> {
       items: params.items.map(({ productId, qty }) => ({ productId, qty })),
       couponCode: params.couponCode ?? null,
       recipient: params.recipient,
+      creditUsed: params.creditUsed ?? 0,
     },
   });
   if (error) {

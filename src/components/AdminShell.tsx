@@ -76,7 +76,7 @@ export default function AdminShell({ title, children }: Props): JSX.Element {
   const dateStr = useDateStr();
   const [profile, setProfile] = useState<ProfileRow | null>(null);
 
-  usePageTitle(`${title} — ENSO 後台`);
+  usePageTitle(`${title} — Queen Maeve 後台`);
 
   useEffect(() => {
     getCurrentProfile().then(setProfile).catch(() => null);
@@ -94,9 +94,9 @@ export default function AdminShell({ title, children }: Props): JSX.Element {
 
           {/* Brand / logo area */}
           <div className={styles.sidebarBrand}>
-            <div className={styles.sidebarKanji}>禪</div>
+            <div className={styles.sidebarKanji}>后</div>
             <div className={styles.sidebarLogo}>
-              <span className={styles.sidebarLogoAccent}>ENSO</span>
+              <span className={styles.sidebarLogoAccent}>Queen Maeve</span>
               {" "}ADMIN
             </div>
           </div>

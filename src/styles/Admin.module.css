@@ -1,23 +1,23 @@
 /* ═══════════════════════════════════════════════════════════════════
-   ENSO 後台設計系統  |  Admin Design System
-   font: Shippori Mincho · Noto Serif TC · Noto Sans TC
+   Queen Maeve 後台設計系統  |  Admin Design System
+   font: Playfair Display · Jost · Noto Serif/Sans TC  |  palette: 星夜鎏金
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ── Design Tokens (scoped to admin shell) ─────────────────────── */
 .shell {
-  --enso-ink:       #1a1d1b;
-  --enso-ink-deep:  #0d1210;
-  --enso-ink-soft:  #252927;
-  --enso-gold:      #c9a063;
-  --enso-gold-deep: #a8864d;
-  --enso-gold-soft: #d9b680;
-  --washi:          #f5eee0;
-  --washi-warm:     #ede2cc;
-  --fg:             #f5eee0;
-  --fg-muted:       rgba(245,238,224,.58);
-  --fg-dim:         rgba(245,238,224,.35);
-  --line:           rgba(201,160,99,.16);
-  --line-strong:    rgba(201,160,99,.38);
+  --enso-ink:       #17121d;
+  --enso-ink-deep:  #0f0b14;
+  --enso-ink-soft:  #241b2e;
+  --enso-gold:      #d9a97f;
+  --enso-gold-deep: #c08a63;
+  --enso-gold-soft: #e7c79b;
+  --washi:          #f1e9df;
+  --washi-warm:     #e9ddcf;
+  --fg:             #f1e9df;
+  --fg-muted:       rgba(241,233,223,.58);
+  --fg-dim:         rgba(241,233,223,.35);
+  --line:           rgba(217,169,127,.16);
+  --line-strong:    rgba(217,169,127,.38);
   --accent:         var(--enso-gold);
   --danger:         #b04040;
   --danger-muted:   rgba(176,64,64,.15);
@@ -25,7 +25,7 @@
   --success-muted:  rgba(74,140,92,.15);
   --warn:           #a87820;
   --warn-muted:     rgba(168,120,32,.15);
-  --sidebar-bg:     #0f1210;
+  --sidebar-bg:     #120d1a;
   --sidebar-w:      14rem;
   --topbar-h:       3.5rem;
   --radius:         .2rem;
@@ -34,7 +34,7 @@
   min-height: 100vh;
   background: var(--enso-ink);
   color: var(--fg);
-  font-family: 'Noto Sans TC', system-ui, sans-serif;
+  font-family: 'Jost', 'Noto Sans TC', system-ui, sans-serif;
   font-size: .9rem;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -67,16 +67,16 @@
   flex-shrink: 0;
 }
 .sidebarKanji {
-  font-family: 'Shippori Mincho', 'Noto Serif TC', serif;
+  font-family: 'Playfair Display', 'Noto Serif TC', serif;
   font-size: 2rem;
   font-weight: 600;
   color: var(--enso-gold);
   line-height: 1;
   letter-spacing: .04em;
-  text-shadow: 0 0 24px rgba(201,160,99,.3);
+  text-shadow: 0 0 24px rgba(217,169,127,.3);
 }
 .sidebarLogo {
-  font-family: 'Noto Serif TC', serif;
+  font-family: 'Playfair Display', 'Noto Serif TC', serif;
   font-size: .65rem;
   letter-spacing: .22em;
   text-transform: uppercase;
@@ -107,7 +107,7 @@
   text-transform: uppercase;
   color: var(--fg-dim);
   padding: .9rem 1.25rem .3rem;
-  font-family: 'Noto Sans TC', sans-serif;
+  font-family: 'Jost', 'Noto Sans TC', sans-serif;
 }
 .sidebarLink {
   display: flex;
@@ -122,11 +122,11 @@
   position: relative;
 }
 .sidebarLink:hover {
-  background: rgba(201,160,99,.08);
+  background: rgba(217,169,127,.08);
   color: var(--fg);
 }
 .sidebarLink.active {
-  background: rgba(201,160,99,.14);
+  background: rgba(217,169,127,.14);
   color: var(--enso-gold);
 }
 .sidebarLink.active::before {
@@ -161,7 +161,7 @@
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  background: rgba(201,160,99,.18);
+  background: rgba(217,169,127,.18);
   border: 1px solid var(--line-strong);
   display: flex;
   align-items: center;
@@ -169,7 +169,7 @@
   font-size: .8rem;
   color: var(--enso-gold);
   flex-shrink: 0;
-  font-family: 'Noto Serif TC', serif;
+  font-family: 'Playfair Display', 'Noto Serif TC', serif;
 }
 .sidebarUserInfo { min-width: 0; flex: 1; }
 .sidebarUserName {
@@ -205,7 +205,7 @@
 }
 .topbarTitle {
   font-size: 1rem;
-  font-family: 'Noto Serif TC', serif;
+  font-family: 'Playfair Display', 'Noto Serif TC', serif;
   font-weight: 400;
   margin: 0;
   letter-spacing: .06em;
@@ -225,7 +225,7 @@
 
 /* ── Typography helpers ──────────────────────────────────────────── */
 .sectionTitle {
-  font-family: 'Noto Serif TC', serif;
+  font-family: 'Playfair Display', 'Noto Serif TC', serif;
   font-size: 1.1rem;
   font-weight: 500;
   letter-spacing: .06em;
@@ -269,7 +269,7 @@
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 60%;
-  background: linear-gradient(to bottom, rgba(201,160,99,.04), transparent);
+  background: linear-gradient(to bottom, rgba(217,169,127,.04), transparent);
   pointer-events: none;
 }
 .statLabel {
@@ -278,13 +278,13 @@
   text-transform: uppercase;
   color: var(--enso-gold);
   margin-bottom: .5rem;
-  font-family: 'Noto Sans TC', sans-serif;
+  font-family: 'Jost', 'Noto Sans TC', sans-serif;
 }
 .statValue {
   font-size: 2rem;
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
-  font-family: 'Noto Serif TC', serif;
+  font-family: 'Playfair Display', 'Noto Serif TC', serif;
   font-weight: 300;
   color: var(--fg);
 }
@@ -303,7 +303,7 @@
   margin-bottom: 1.25rem;
   transition: border-color .2s;
 }
-.card:hover { border-color: rgba(201,160,99,.55); }
+.card:hover { border-color: rgba(217,169,127,.55); }
 .cardHeader {
   display: flex;
   align-items: center;
@@ -329,7 +329,7 @@
   color: var(--enso-gold);
   white-space: nowrap;
   background: rgba(13,18,16,.7);
-  font-family: 'Noto Sans TC', sans-serif;
+  font-family: 'Jost', 'Noto Sans TC', sans-serif;
 }
 .table td {
   padding: .7rem 1rem;
@@ -337,9 +337,9 @@
   vertical-align: middle;
 }
 .table tbody tr { transition: background .1s; }
-.table tbody tr:hover { background: rgba(201,160,99,.06); }
+.table tbody tr:hover { background: rgba(217,169,127,.06); }
 .table tbody tr:nth-child(even) { background: rgba(255,255,255,.015); }
-.table tbody tr:nth-child(even):hover { background: rgba(201,160,99,.06); }
+.table tbody tr:nth-child(even):hover { background: rgba(217,169,127,.06); }
 .table tfoot td {
   border-top: 1px solid var(--line-strong);
   font-size: .8rem;
@@ -355,13 +355,13 @@
   letter-spacing: .07em;
   font-weight: 500;
   border-radius: var(--radius);
-  font-family: 'Noto Sans TC', sans-serif;
+  font-family: 'Jost', 'Noto Sans TC', sans-serif;
 }
-.badgeGold    { background: rgba(201,160,99,.2);  color: var(--enso-gold); border: 1px solid rgba(201,160,99,.4); }
+.badgeGold    { background: rgba(217,169,127,.2);  color: var(--enso-gold); border: 1px solid rgba(217,169,127,.4); }
 .badgeSuccess { background: var(--success-muted); color: #6ec88a; border: 1px solid rgba(74,140,92,.35); }
 .badgeDanger  { background: var(--danger-muted);  color: #e07070; border: 1px solid rgba(176,64,64,.35); }
 .badgeWarn    { background: var(--warn-muted);    color: #d4a240; border: 1px solid rgba(168,120,32,.35); }
-.badgeNeutral { background: rgba(245,238,224,.08); color: var(--fg-muted); border: 1px solid rgba(245,238,224,.15); }
+.badgeNeutral { background: rgba(241,233,223,.08); color: var(--fg-muted); border: 1px solid rgba(241,233,223,.15); }
 
 /* ── Buttons ─────────────────────────────────────────────────────── */
 .btn {
@@ -375,7 +375,7 @@
   background: transparent;
   color: var(--fg);
   font-size: .82rem;
-  font-family: 'Noto Sans TC', sans-serif;
+  font-family: 'Jost', 'Noto Sans TC', sans-serif;
   cursor: pointer;
   text-decoration: none;
   transition: background .15s, border-color .15s, color .15s, transform .1s;
@@ -383,7 +383,7 @@
   white-space: nowrap;
 }
 .btn:hover {
-  background: rgba(201,160,99,.1);
+  background: rgba(217,169,127,.1);
   border-color: var(--enso-gold);
   color: var(--enso-gold);
   transform: translateY(-1px);
@@ -414,7 +414,7 @@
   text-transform: uppercase;
   color: var(--enso-gold);
   margin-bottom: .4rem;
-  font-family: 'Noto Sans TC', sans-serif;
+  font-family: 'Jost', 'Noto Sans TC', sans-serif;
 }
 .formControl {
   width: 100%;
@@ -425,15 +425,15 @@
   font-size: .875rem;
   border-radius: var(--radius);
   box-sizing: border-box;
-  font-family: 'Noto Sans TC', sans-serif;
+  font-family: 'Jost', 'Noto Sans TC', sans-serif;
   transition: border-color .15s, box-shadow .15s;
 }
 .formControl:focus {
   outline: none;
   border-color: var(--enso-gold);
-  box-shadow: 0 0 0 2px rgba(201,160,99,.12);
+  box-shadow: 0 0 0 2px rgba(217,169,127,.12);
 }
-.formControl option { background: #1a1d1b; }
+.formControl option { background: #17121d; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
 
@@ -467,7 +467,7 @@
   border-bottom: 1px solid var(--line);
 }
 .modalTitle {
-  font-family: 'Noto Serif TC', serif;
+  font-family: 'Playfair Display', 'Noto Serif TC', serif;
   font-size: 1rem;
   margin: 0;
   letter-spacing: .06em;
@@ -497,7 +497,7 @@
   border-left: 2px solid var(--enso-gold);
   padding: .85rem 1rem;
   margin: 1rem 0;
-  background: rgba(201,160,99,.06);
+  background: rgba(217,169,127,.06);
   font-size: .85rem;
   color: var(--fg-muted);
   letter-spacing: .02em;
@@ -541,7 +541,7 @@
   border-bottom: 1px solid var(--line);
   background: rgba(13,18,16,.4);
 }
-.subTable td { padding: .5rem .85rem; border-bottom: 1px solid rgba(201,160,99,.08); }
+.subTable td { padding: .5rem .85rem; border-bottom: 1px solid rgba(217,169,127,.08); }
 
 /* ── Separator ───────────────────────────────────────────────────── */
 .divider {
@@ -593,7 +593,7 @@
 }
 .menuCard:hover {
   border-color: var(--enso-gold);
-  background: rgba(201,160,99,.06);
+  background: rgba(217,169,127,.06);
   transform: translateY(-2px);
 }
 .menuCard:hover::before { background: var(--enso-gold); }
@@ -603,7 +603,7 @@
   display: block;
 }
 .menuLabel {
-  font-family: 'Noto Serif TC', serif;
+  font-family: 'Playfair Display', 'Noto Serif TC', serif;
   font-size: .95rem;
   letter-spacing: .04em;
   color: var(--fg);
@@ -621,7 +621,7 @@
   border-bottom: 1px solid var(--line);
 }
 .welcomeGreet {
-  font-family: 'Noto Serif TC', serif;
+  font-family: 'Playfair Display', 'Noto Serif TC', serif;
   font-size: 1.5rem;
   font-weight: 300;
   color: var(--fg);
@@ -652,7 +652,7 @@
 .barTrack {
   flex: 1;
   height: .5rem;
-  background: rgba(201,160,99,.1);
+  background: rgba(217,169,127,.1);
   border-radius: 4px;
   overflow: hidden;
 }

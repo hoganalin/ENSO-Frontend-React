@@ -51,7 +51,7 @@ const Register = (): JSX.Element => {
         icon: needsEmailConfirmation ? "info" : "success",
         title: needsEmailConfirmation
           ? "註冊成功，請先到信箱完成驗證。"
-          : "註冊成功！歡迎加入 ENSO。",
+          : "註冊成功！歡迎加入 Queen Maeve。",
         showConfirmButton: false,
         timer: needsEmailConfirmation ? 4000 : 2000,
         timerProgressBar: true,
@@ -141,7 +141,7 @@ const Register = (): JSX.Element => {
             <input
               type="text"
               className="input-field-enso"
-              placeholder="有推薦碼請填入，例如 ENSO-XXXXX"
+              placeholder="有推薦碼請填入，例如 QM-XXXXX"
               {...register("referrerCode")}
             />
             {refFromUrl && (

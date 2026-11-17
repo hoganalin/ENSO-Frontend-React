@@ -1,42 +1,43 @@
 /* ============================================
-   ENSO 京都 — Design Tokens (CSS custom properties)
-   Source: design_handoff_enso_kyoto/styles.css
+   Queen Maeve 王后美芙 — 星夜鎏金 (Celestial Noir)
+   Design Tokens (CSS custom properties)
+   變數名沿用舊有，換值即全站換膚。
    ============================================ */
 
 :root {
   /* Core brand colors */
-  --enso-ink: #1a1d1b;          /* 墨黑 */
-  --enso-ink-deep: #0d0f0e;     /* 更深的墨 */
-  --enso-ink-soft: #2a2e2b;     /* 柔墨 */
-  --enso-gold: #c9a063;         /* 金 */
-  --enso-gold-deep: #a8864d;    /* 深金 */
-  --enso-gold-soft: #d9b680;    /* 柔金 */
-  --enso-brown: #8a7a64;        /* 褐 */
-  --enso-primary: #24352f;      /* 深墨綠 */
+  --enso-ink: #17121d;          /* 夜墨紫 — 主背景 */
+  --enso-ink-deep: #0f0b14;     /* 更深夜墨 */
+  --enso-ink-soft: #241b2e;     /* 幽紫 — 墊高表面 */
+  --enso-gold: #d9a97f;         /* 玫瑰金 — 主 accent */
+  --enso-gold-deep: #c08a63;    /* 深玫瑰金 */
+  --enso-gold-soft: #e7c79b;    /* 柔金 */
+  --enso-brown: #9a7f86;        /* 灰玫瑰褐 */
+  --enso-primary: #2e2340;      /* 深紫 */
 
   /* Paper / neutrals */
-  --washi: #f5eee0;             /* 和紙米白 */
-  --washi-warm: #ede2cc;        /* 暖和紙 */
-  --washi-shadow: #d9cdb2;      /* 和紙陰影 */
-  --vermillion: #a83a2c;        /* 朱印紅 */
-  --vermillion-deep: #7a2a1f;
+  --washi: #f1e9df;             /* 月牙白 — 主文字 */
+  --washi-warm: #e9ddcf;        /* 暖牙白 */
+  --washi-shadow: #cdbfae;      /* 牙白陰影 */
+  --vermillion: #c25a6a;        /* 玫瑰緋 — 提示 / 促銷 */
+  --vermillion-deep: #9e4455;
 
   /* Semantic */
   --enso-bg: var(--enso-ink);
   --enso-bg-elevated: var(--enso-ink-soft);
   --enso-fg: var(--washi);
-  --fg-muted: rgba(245, 238, 224, 0.6);
-  --fg-dim: rgba(245, 238, 224, 0.4);
+  --fg-muted: rgba(241, 233, 223, 0.62);
+  --fg-dim: rgba(241, 233, 223, 0.4);
   --enso-accent: var(--enso-gold);
-  --line: rgba(201, 160, 99, 0.18);
-  --line-strong: rgba(201, 160, 99, 0.4);
+  --line: rgba(217, 169, 127, 0.2);
+  --line-strong: rgba(217, 169, 127, 0.42);
 
-  /* Type stacks (fonts loaded via <link> in app/layout.tsx) */
-  --font-serif-jp: 'Shippori Mincho', 'Noto Serif TC', serif;
-  --font-serif-tc: 'Noto Serif TC', 'Shippori Mincho', serif;
-  --font-brush: 'Klee One', 'Shippori Mincho', cursive;
+  /* Type stacks (fonts loaded via <link> in index.html) */
+  --font-serif-jp: 'Playfair Display', 'Noto Serif TC', serif;   /* 標題 display */
+  --font-serif-tc: 'Noto Serif TC', 'Playfair Display', serif;   /* 中文襯線內文 */
+  --font-brush: 'Cormorant Garamond', 'Noto Serif TC', serif;    /* 裝飾襯線 */
   --font-latin-serif: 'Cormorant Garamond', serif;
-  --font-latin-display: 'Cinzel', serif;
+  --font-latin-display: 'Playfair Display', 'Cormorant Garamond', serif;
 
   /* Motion */
   --ease-enso: cubic-bezier(0.2, 0.8, 0.2, 1);

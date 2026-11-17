@@ -7,7 +7,7 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { listPublishedJournal } from "@/services/db/journal";
 
 export default function JournalPage(): JSX.Element {
-  const [articles,setArticles]=useState(JOURNAL);
+  const [articles,setArticles]=useState<typeof JOURNAL>([]); // 預設空：DB 未發布時顯示「即將上線」，不帶入舊香道示意文
   const [error,setError]=useState(false);
   const [loading,setLoading]=useState(true);
   const [attempt,setAttempt]=useState(0);
@@ -17,17 +17,16 @@ export default function JournalPage(): JSX.Element {
       .finally(()=>{if(active)setLoading(false);});
     return ()=>{active=false;};
   },[attempt]);
-  usePageTitle("香誌 · ENSO");
+  usePageTitle("香誌 · Queen Maeve");
   return (
     <div className="enso-journal">
       <header className="enso-journal__hero">
         <div className="t-eyebrow">Journal</div>
         <h1 className="enso-journal__title">
-          香の<span className="accent">読み物</span>
+          品牌<span className="accent">日誌</span>
         </h1>
         <p className="enso-journal__sub">
-          關於香道、茶室、職人之手與冥想練習——
-          京都人不寫在日曆上的歲時記。
+          關於能量香氛、儀式感與日常靜心的點滴。
         </p>
         <KanjiDivider kanji="誌" />
       </header>
@@ -35,7 +34,7 @@ export default function JournalPage(): JSX.Element {
       <section className="enso-journal__grid">
         {loading && <p role="status">正在讀取最新文章…</p>}
         {error && <p role="alert">最新文章暫時無法讀取，您仍可閱讀下列香誌。<button onClick={()=>setAttempt(n=>n+1)}>重新讀取</button></p>}
-        {!loading && !articles.length && <p>目前沒有已發布文章。</p>}
+        {!loading && !articles.length && <p>品牌日誌即將上線，敬請期待。</p>}
         {articles.map((article, i) => (
           <Link
             key={article.id}

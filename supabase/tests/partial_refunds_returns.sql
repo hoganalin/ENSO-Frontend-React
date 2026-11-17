@@ -1,0 +1,48 @@
+-- Run after migration 20260919000004. Fixtures always roll back.
+begin;
+create function pg_temp.assert_true(ok boolean,message text) returns void language plpgsql as $$ begin if ok is distinct from true then raise exception 'ASSERT: %',message; end if; end $$;
+create function pg_temp.must_fail(statement text) returns void language plpgsql as $$ declare failed boolean:=false; begin begin execute statement; exception when others then failed:=true; end; perform pg_temp.assert_true(failed,'Expected rejection: '||statement); end $$;
+do $$
+declare a uuid:=gen_random_uuid(); b uuid:=gen_random_uuid(); w uuid:=gen_random_uuid(); o uuid:=gen_random_uuid(); p uuid:=gen_random_uuid(); i uuid:=gen_random_uuid(); r uuid; r2 uuid; k uuid:=gen_random_uuid(); receipt_key uuid:=gen_random_uuid(); receipt uuid;
+begin
+ perform set_config('request.jwt.claims','{"role":"service_role"}',true);
+ insert into auth.users(id,email,raw_user_meta_data) values(a,a||'@acceptance.invalid','{}'),(b,b||'@acceptance.invalid','{}'),(w,w||'@acceptance.invalid','{}');
+ insert into public.profiles(id,role) values(a,'admin'),(b,'customer'),(w,'warehouse') on conflict(id) do update set role=excluded.role;
+ insert into public.products(id,title,price,inventory) values(p,'Return fixture',500,10);
+ insert into public.orders(id,buyer_id,total,subtotal,status) values(o,b,1000,1000,'paid');
+ insert into public.order_items(id,order_id,product_id,title,unit_price,qty) values(i,o,p,'Return fixture',500,2);
+ insert into public.store_credit_ledger(member_id,type,amount,order_id) values(b,'earn',101,o);
+ perform set_config('request.jwt.claims',jsonb_build_object('role','authenticated','sub',b)::text,true);
+ r:=(public.request_partial_refund(o,333,'First partial',k)->>'id')::uuid;
+ perform pg_temp.assert_true((public.request_partial_refund(o,333,'First partial',k)->>'id')::uuid=r,'request idempotency');
+ perform pg_temp.must_fail(format('select public.request_partial_refund(%L,334,''First partial'',%L)',o,k));
+ perform pg_temp.must_fail(format('select public.request_partial_refund(%L,668,''Too much'',%L)',o,gen_random_uuid()));
+ perform set_config('request.jwt.claims','{"role":"service_role"}',true);
+ perform public.complete_refund(a,o,r,'failed');
+ perform public.complete_refund(a,o,r,'succeeded','MOCK-FIRST');
+ perform public.complete_refund(a,o,r,'succeeded','MOCK-FIRST');
+ perform pg_temp.assert_true((select status='paid' from public.orders where id=o),'partial keeps fulfillment status');
+ perform pg_temp.assert_true((select sum(amount)=33 from public.store_credit_ledger where order_id=o and type='reverse'),'floor partial credit reversal');
+ perform pg_temp.must_fail(format('select public.receive_order_return(%L,%L,%L,1,%L,''Unshipped'')',w,o,i,receipt_key));
+ perform public.admin_order_action(w,o,'ship',null,'MOCK-TRACK');
+ perform pg_temp.assert_true((select inventory=8 from public.products where id=p),'ship subtracts inventory');
+ perform pg_temp.must_fail(format('select public.receive_order_return(%L,%L,%L,1,%L,''Received'')',b,o,i,receipt_key));
+ receipt:=(public.receive_order_return(w,o,i,1,receipt_key,'Received')->>'id')::uuid;
+ perform pg_temp.assert_true((public.receive_order_return(w,o,i,1,receipt_key,'Received')->>'id')::uuid=receipt,'return idempotency');
+ perform pg_temp.assert_true((select inventory=9 from public.products where id=p),'one unit restored');
+ perform pg_temp.must_fail(format('select public.receive_order_return(%L,%L,%L,2,%L,''Too many'')',w,o,i,gen_random_uuid()));
+ perform set_config('request.jwt.claims',jsonb_build_object('role','authenticated','sub',b)::text,true);
+ r2:=(public.request_partial_refund(o,667,'Remaining amount',gen_random_uuid())->>'id')::uuid;
+ perform set_config('request.jwt.claims','{"role":"service_role"}',true);
+ perform public.complete_refund(a,o,r2,'uncertain');
+ perform pg_temp.must_fail(format('select public.complete_refund(%L,%L,%L,''rejected'')',a,o,r2));
+ perform public.complete_refund(a,o,r2,'succeeded','MOCK-SECOND');
+ perform pg_temp.assert_true((select status='refunded' from public.orders where id=o),'cumulative total closes order');
+ perform pg_temp.assert_true((select sum(amount)=101 from public.store_credit_ledger where order_id=o and type='reverse'),'final reversal resolves rounding');
+ perform pg_temp.assert_true((select inventory=9 from public.products where id=p),'refund does not restore stock');
+ perform public.receive_order_return(w,o,i,1,gen_random_uuid(),'Final unit');
+ perform pg_temp.assert_true((select inventory=10 from public.products where id=p),'independent final return');
+ perform pg_temp.assert_true(not has_function_privilege('authenticated','public.receive_order_return(uuid,uuid,uuid,integer,uuid,text)','EXECUTE'),'no browser actor impersonation');
+end $$;
+select 'PASS partial refunds, caps, replay, proportional credit, independent returns, warehouse authorization' as result;
+rollback;

@@ -12,7 +12,7 @@ interface CheckoutSuccessProps {
 function CheckoutSuccess({ orderId }: CheckoutSuccessProps): JSX.Element {
   const [searchParams] = useSearchParams();
   const [orderNumber] = useState(
-    () => orderId || "ENSO-" + Math.floor(10000000 + Math.random() * 89999999),
+    () => orderId || "QM-" + Math.floor(10000000 + Math.random() * 89999999),
   );
   const paidMethodId = searchParams.get("method") ?? "";
   const merchantTradeNo = searchParams.get("tno") ?? "";
@@ -32,7 +32,7 @@ function CheckoutSuccess({ orderId }: CheckoutSuccessProps): JSX.Element {
         </h1>
         <p className="enso-success__copy">
           感謝您的訂購。<br />
-          我們已收到訂單，正在為您準備精心挑選的線香。
+          我們已收到訂單，正在為您準備精心挑選的能量香氛。
         </p>
 
         <KanjiDivider kanji="完" />

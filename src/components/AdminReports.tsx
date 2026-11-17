@@ -1,7 +1,7 @@
 // src/components/AdminReports.tsx — 月營業報表
 import { useEffect, useState, type JSX } from "react";
 import AdminShell from "./AdminShell";
-import { supabase } from "@/services/supabaseClient";
+import { supabase } from "@/lib/supabase";
 import styles from "@/styles/Admin.module.css";
 
 // ── 型別 ─────────────────────────────────────────────────────────────────────

@@ -2,29 +2,27 @@ import { Link } from "react-router";
 
 const COLUMNS = [
   {
-    heading: "Incense",
+    heading: "商品",
     items: [
       { label: "全部商品", href: "/product" },
-      { label: "放鬆系列", href: "/product?category=放鬆" },
-      { label: "冥想系列", href: "/product?category=冥想" },
-      { label: "淨化系列", href: "/product?category=淨化" },
-      { label: "復甦系列", href: "/product?category=復甦" },
+      { label: "能量精油", href: "/product?category=能量精油" },
+      { label: "香氛噴霧", href: "/product?category=香氛噴霧" },
+      { label: "能量蠟燭", href: "/product?category=能量蠟燭" },
+      { label: "洗髮護髮", href: "/product?category=洗髮精" },
     ],
   },
   {
     heading: "Brand",
     items: [
       { label: "品牌故事", href: "/about" },
-      { label: "香誌", href: "/journal" },
-      { label: "實體店面", href: "/stores" },
+      { label: "常見問題", href: "/faq" },
     ],
   },
   {
     heading: "Service",
     items: [
-      { label: "常見問題", href: "/faq" },
-      { label: "聯絡我們", href: "/contact" },
       { label: "登入 / 註冊", href: "/login" },
+      { label: "購物車", href: "/cart" },
     ],
   },
 ];
@@ -34,11 +32,11 @@ function Footer(): JSX.Element {
     <footer className="enso-footer">
       <div className="enso-footer__inner">
         <div>
-          <p className="enso-footer__brand-mark">ENSO</p>
-          <p className="enso-footer__brand-kanji">京都・線香</p>
+          <p className="enso-footer__brand-mark">Queen Maeve</p>
+          <p className="enso-footer__brand-kanji">王后美芙 · 能量香氛</p>
           <p className="enso-footer__tagline">
-            天然手工線香品牌，致力於用香氣連結人們與內在寧靜。
-            一支線香，一段呼吸，一處靜謐之地。
+            能量香氛與植萃保養。以香氣點亮你的磁場，
+            讓好運、桃花與貴人，循光而來。
           </p>
         </div>
 
@@ -59,8 +57,8 @@ function Footer(): JSX.Element {
       </div>
 
       <div className="enso-footer__bottom">
-        <span>© {new Date().getFullYear()} ENSO</span>
-        <span>和敬清寂 · 一期一会</span>
+        <span>© {new Date().getFullYear()} Queen Maeve 王后美芙</span>
+        <span>當星辰為你閃耀，對的人自會循光而來</span>
       </div>
     </footer>
   );

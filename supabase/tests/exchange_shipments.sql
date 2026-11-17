@@ -1,0 +1,33 @@
+begin;
+create function pg_temp.assert_true(ok boolean,message text) returns void language plpgsql as $$ begin if ok is distinct from true then raise exception 'ASSERT: %',message; end if; end $$;
+create function pg_temp.must_fail(statement text) returns void language plpgsql as $$ declare failed boolean:=false; begin begin execute statement; exception when others then failed:=true; end; perform pg_temp.assert_true(failed,'Expected rejection: '||statement); end $$;
+do $$
+declare a uuid:=gen_random_uuid(); b uuid:=gen_random_uuid(); w uuid:=gen_random_uuid(); o uuid:=gen_random_uuid(); p uuid:=gen_random_uuid(); i uuid:=gen_random_uuid(); r uuid; k uuid:=gen_random_uuid(); receipt uuid; shipment uuid;
+begin
+ perform set_config('request.jwt.claims','{"role":"service_role"}',true);
+ insert into auth.users(id,email,raw_user_meta_data) values(a,a||'@acceptance.invalid','{}'),(b,b||'@acceptance.invalid','{}'),(w,w||'@acceptance.invalid','{}');
+ insert into public.profiles(id,role) values(a,'admin'),(b,'customer'),(w,'warehouse') on conflict(id) do update set role=excluded.role;
+ insert into public.products(id,title,price,inventory) values(p,'Exchange fixture',500,10);
+ insert into public.orders(id,buyer_id,total,subtotal,status) values(o,b,1000,1000,'paid');
+ insert into public.order_items(id,order_id,product_id,title,unit_price,qty) values(i,o,p,'Exchange fixture',500,2);
+ perform public.admin_order_action(w,o,'ship',null,'ORIGINAL');
+ receipt:=(public.receive_order_return(w,o,i,1,gen_random_uuid(),'Received')->>'id')::uuid;
+ perform set_config('request.jwt.claims',jsonb_build_object('role','authenticated','sub',b)::text,true);
+ r:=(public.request_partial_refund(o,500,'Refund instead',gen_random_uuid())->>'id')::uuid;
+ perform set_config('request.jwt.claims','{"role":"service_role"}',true);
+ perform pg_temp.must_fail(format('select public.ship_order_exchange(%L,%L,%L,1,%L,''REPLACE'')',w,o,receipt,k));
+ perform public.complete_refund(a,o,r,'rejected');
+ perform pg_temp.must_fail(format('select public.ship_order_exchange(%L,%L,%L,1,%L,''REPLACE'')',b,o,receipt,k));
+ update public.products set inventory=0 where id=p;
+ perform pg_temp.must_fail(format('select public.ship_order_exchange(%L,%L,%L,1,%L,''REPLACE'')',w,o,receipt,k));
+ update public.products set inventory=9 where id=p;
+ shipment:=(public.ship_order_exchange(w,o,receipt,1,k,'REPLACE')->>'id')::uuid;
+ perform pg_temp.assert_true((public.ship_order_exchange(w,o,receipt,1,k,'REPLACE')->>'id')::uuid=shipment,'exchange replay idempotent');
+ perform pg_temp.assert_true((select inventory=8 from public.products where id=p),'replacement deducted once');
+ perform pg_temp.must_fail(format('select public.ship_order_exchange(%L,%L,%L,1,%L,''EXTRA'')',w,o,receipt,gen_random_uuid()));
+ perform set_config('request.jwt.claims',jsonb_build_object('role','authenticated','sub',b)::text,true);
+ perform pg_temp.must_fail(format('select public.request_partial_refund(%L,500,''Double benefit'',%L)',o,gen_random_uuid()));
+ perform pg_temp.assert_true(not has_function_privilege('authenticated','public.ship_order_exchange(uuid,uuid,uuid,integer,uuid,text)','EXECUTE'),'exchange role cannot be impersonated');
+end $$;
+select 'PASS: same SKU exchange, refund exclusion, authorization, stock limit, receipt cap, replay' as result;
+rollback;

@@ -71,7 +71,7 @@ create table if not exists public.products (
 -- ---------- orders / order_items ----------
 create table if not exists public.orders (
   id            uuid primary key default gen_random_uuid(),
-  order_no      text unique not null default ('ENSO-' || upper(substr(md5(gen_random_uuid()::text),1,8))),
+  order_no      text unique not null default ('QM-' || upper(substr(md5(gen_random_uuid()::text),1,8))),
   buyer_id      uuid references public.profiles(id),
   referrer_id   uuid references public.profiles(id),     -- 推薦歸戶（下單當下買家的推薦人快照）
   subtotal      integer not null default 0,               -- 商品小計（折扣後、不含運費）→ 購物金基準

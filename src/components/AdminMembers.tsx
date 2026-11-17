@@ -50,7 +50,7 @@ function downloadMembersCSV(rows: MemberRow[]): void {
   const a = document.createElement("a");
   a.href = url;
   const today = new Date().toISOString().slice(0, 10);
-  a.download = `ENSO_會員資料_${today}.csv`;
+  a.download = `QueenMaeve_會員資料_${today}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }

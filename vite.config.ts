@@ -8,6 +8,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  server: {
+    // dev-only：讓 ngrok / cloudflared 等通道網域能存取 dev server（本機測 LINE Pay 轉導用）
+    allowedHosts: [".ngrok-free.app", ".ngrok.app", ".ngrok.io", ".trycloudflare.com"],
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),

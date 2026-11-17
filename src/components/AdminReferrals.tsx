@@ -52,7 +52,7 @@ function downloadReferralCSV(rows: PartnerStats[]): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `ENSO_推薦人報表_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `QueenMaeve_推薦人報表_${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { RotatingLines } from "react-loader-spinner";
 import { useDispatch } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router";
@@ -20,7 +20,6 @@ interface PaginationData {
   has_pre: boolean;
 }
 
-const FALLBACK_KANJI = ["香", "月", "霧", "禅", "静", "夜", "炎", "風"];
 
 const Products = (): JSX.Element => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -30,6 +29,9 @@ const Products = (): JSX.Element => {
   const [loadingCartId, setLoadingCartId] = useState<string | null>(null);
   const [pagination, setPagination] = useState<PaginationData | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const requestId = useRef(0);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { showSuccess, showError } = useMessage();
@@ -38,7 +40,7 @@ const Products = (): JSX.Element => {
   const urlCategory = searchParams.get("category");
 
   useEffect(() => {
-    if (urlCategory) setCurrentCategory(urlCategory);
+    setCurrentCategory(urlCategory || "all");
   }, [urlCategory]);
 
   const handleAddCart = async (
@@ -61,16 +63,24 @@ const Products = (): JSX.Element => {
 
   const getProducts = useCallback(
     async (page = 1, category = currentCategory) => {
+      const id = ++requestId.current;
+      setLoading(true);
+      setLoadError("");
       try {
         const response = await getProductApi(page, category);
+        if (id !== requestId.current) return;
         setProducts(response.data.products);
         setPagination(response.data.pagination);
       } catch (error: unknown) {
+        if (id !== requestId.current) return;
+        setLoadError("商品暫時無法載入，請稍後重試。");
         if (axios.isAxiosError(error)) {
           showError(error.response?.data?.message || "獲取產品列表失敗");
         } else {
           showError("獲取產品列表失敗");
         }
+      } finally {
+        if (id === requestId.current) setLoading(false);
       }
     },
     [currentCategory, showError],
@@ -117,10 +127,10 @@ const Products = (): JSX.Element => {
       <header className="enso-product-page__hero">
         <div className="t-eyebrow">Collection</div>
         <h1 className="enso-product-page__title">
-          香の<span className="accent">商い</span>
+          能量<span className="accent">香氛</span>
         </h1>
         <p className="enso-product-page__sub">
-          四相之香——放鬆・冥想・淨化・復甦。每一支線香，都是一次回歸自我的邀請。
+          四相能量——招財・桃花・貴人・淨化。每一支香氛，都是為你的磁場重新定位的邀請。
         </p>
       </header>
 
@@ -196,7 +206,12 @@ const Products = (): JSX.Element => {
           )}
 
           <div className="enso-product-grid">
-            {filteredProducts.length > 0 ? (
+            {loading ? <p role="status">商品載入中…</p> : loadError ? (
+              <div className="enso-product-empty" role="alert">
+                <p>{loadError}</p>
+                <button type="button" className="btn-ghost" onClick={() => getProducts()}>重新載入</button>
+              </div>
+            ) : filteredProducts.length > 0 ? (
               filteredProducts.map((product, index) => (
                 <article
                   key={product.id}
@@ -217,9 +232,6 @@ const Products = (): JSX.Element => {
                         NO IMAGE
                       </div>
                     )}
-                    <span className="enso-product-card__kanji" aria-hidden>
-                      {FALLBACK_KANJI[index % FALLBACK_KANJI.length]}
-                    </span>
                   </button>
                   <div className="enso-product-card__eyebrow">{product.category}</div>
                   <h3 className="enso-product-card__title">
@@ -254,16 +266,16 @@ const Products = (): JSX.Element => {
             ) : (
               <div className="enso-product-empty">
                 <div className="t-eyebrow">No Result</div>
-                <h4>找不到「{searchTerm}」</h4>
-                <p>請嘗試其他關鍵字，或查看全系列商品。</p>
-                <button type="button" className="btn-ghost" onClick={() => navigate("/product")}>
+                <h4>{searchTerm ? `找不到「${searchTerm}」` : "目前沒有符合條件的商品"}</h4>
+                <p>請調整分類或搜尋條件，或查看全系列商品。</p>
+                <button type="button" className="btn-ghost" onClick={() => { setCurrentCategory("all"); navigate("/product"); }}>
                   查看所有商品
                 </button>
               </div>
             )}
           </div>
 
-          {filteredProducts.length > 0 && (
+          {!loading && !loadError && filteredProducts.length > 0 && (
             <Pagination pagination={pagination} onChangePage={getProducts} />
           )}
         </section>

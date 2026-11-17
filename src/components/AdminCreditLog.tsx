@@ -1,7 +1,7 @@
 // src/components/AdminCreditLog.tsx — 購物金帳本
 import { useEffect, useState, type JSX, type ChangeEvent } from "react";
 import AdminShell from "./AdminShell";
-import { supabase } from "@/services/supabaseClient";
+import { supabase } from "@/lib/supabase";
 import styles from "@/styles/Admin.module.css";
 
 // ── 型別 ─────────────────────────────────────────────────────────────────────
@@ -15,6 +15,7 @@ interface LedgerRow {
   order_id: string | null;
   created_at: string;
   expires_at: string | null;
+  note: string | null;
 }
 
 // ── 常數 ─────────────────────────────────────────────────────────────────────
@@ -72,6 +73,15 @@ export default function AdminCreditLog(): JSX.Element {
   const [filterMonth, setFilterMonth] = useState("");
   const [filterMember, setFilterMember] = useState("");
   const [page, setPage]         = useState(0);
+  // 人工調整購物金
+  const [reloadKey, setReloadKey] = useState(0);
+  const [adjQuery, setAdjQuery]   = useState("");
+  const [adjResults, setAdjResults] = useState<{ id: string; name: string; phone: string }[]>([]);
+  const [adjMember, setAdjMember] = useState<{ id: string; name: string; phone: string } | null>(null);
+  const [adjAmount, setAdjAmount] = useState("");
+  const [adjReason, setAdjReason] = useState("");
+  const [adjBusy, setAdjBusy]     = useState(false);
+  const [adjMsg, setAdjMsg]       = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -95,6 +105,7 @@ export default function AdminCreditLog(): JSX.Element {
             order_id,
             created_at,
             expires_at,
+            note,
             profiles:member_id (name, phone)
           `)
           .gte("created_at", since.toISOString())
@@ -113,6 +124,7 @@ export default function AdminCreditLog(): JSX.Element {
           order_id:     d.order_id,
           created_at:   d.created_at,
           expires_at:   d.expires_at,
+          note:         d.note ?? null,
         }));
 
         if (active) { setRows(mapped); setPage(0); }
@@ -123,7 +135,7 @@ export default function AdminCreditLog(): JSX.Element {
       }
     })();
     return () => { active = false; };
-  }, []);
+  }, [reloadKey]);
 
   // 篩選
   const filtered = rows.filter(r => {
@@ -144,6 +156,42 @@ export default function AdminCreditLog(): JSX.Element {
   const handleMonth  = (e: ChangeEvent<HTMLSelectElement>) => { setFilterMonth(e.target.value);  setPage(0); };
   const handleMember = (e: ChangeEvent<HTMLInputElement>)  => { setFilterMember(e.target.value); setPage(0); };
 
+  const searchMembers = async (): Promise<void> => {
+    const q = adjQuery.trim().replace(/[,()*%]/g, "");
+    setAdjMsg(null);
+    if (!q) { setAdjResults([]); return; }
+    const { data, error: err } = await supabase
+      .from("profiles").select("id,name,phone")
+      .or(`name.ilike.%${q}%,phone.ilike.%${q}%`).limit(10);
+    if (err) { setAdjMsg("查詢會員失敗：" + err.message); return; }
+    setAdjResults((data ?? []) as { id: string; name: string; phone: string }[]);
+    if (!data || data.length === 0) setAdjMsg("查無會員");
+  };
+
+  const submitAdjust = async (): Promise<void> => {
+    if (!adjMember) { setAdjMsg("請先選擇會員"); return; }
+    const amt = Number(adjAmount);
+    if (!Number.isInteger(amt) || amt === 0) { setAdjMsg("請輸入非 0 的整數金額（負數為扣除）"); return; }
+    if (adjReason.trim().length < 2) { setAdjMsg("請填寫調整原因（至少 2 字）"); return; }
+    setAdjBusy(true); setAdjMsg(null);
+    try {
+      const { data, error: err } = await supabase.functions.invoke("admin-credit-adjust", {
+        body: { memberId: adjMember.id, amount: amt, note: adjReason.trim() },
+      });
+      if (err) {
+        let m = "調整失敗";
+        try { const b = await (err as { context?: Response }).context?.json(); if (b?.error?.message) m = b.error.message; } catch { /* keep fallback */ }
+        throw new Error(m);
+      }
+      const bal = (data as { balance?: number })?.balance;
+      setAdjMsg(`已調整「${adjMember.name}」：${amt > 0 ? "+" : ""}${amt}，目前餘額 NT$${bal}`);
+      setAdjAmount(""); setAdjReason("");
+      setReloadKey(k => k + 1);
+    } catch (e) {
+      setAdjMsg(e instanceof Error ? e.message : "調整失敗");
+    } finally { setAdjBusy(false); }
+  };
+
   return (
     <AdminShell title="購物金帳本">
       {loading && <p className={styles.muted}>載入中…</p>}
@@ -151,6 +199,38 @@ export default function AdminCreditLog(): JSX.Element {
 
       {!loading && !error && (
         <>
+          {/* 人工調整購物金 */}
+          <div className={styles.card} style={{ marginBottom: "1rem", padding: "1rem" }}>
+            <h3 style={{ margin: "0 0 .75rem", fontSize: "1rem" }}>人工調整購物金</h3>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
+              <input className={styles.formControl} placeholder="搜尋會員姓名 / 電話" value={adjQuery}
+                onChange={(e) => setAdjQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") void searchMembers(); }}
+                style={{ width: "200px" }} />
+              <button className={`${styles.btn} ${styles.btnSm}`} onClick={() => void searchMembers()}>查詢會員</button>
+              {adjResults.length > 0 && (
+                <select className={styles.formControl} style={{ width: "auto" }} value={adjMember?.id ?? ""}
+                  onChange={(e) => setAdjMember(adjResults.find((r) => r.id === e.target.value) ?? null)}>
+                  <option value="">選擇會員…</option>
+                  {adjResults.map((r) => <option key={r.id} value={r.id}>{r.name}（{r.phone}）</option>)}
+                </select>
+              )}
+            </div>
+            {adjMember && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", marginTop: ".75rem" }}>
+                <span className={styles.muted}>對象：<b>{adjMember.name}</b>（{adjMember.phone}）</span>
+                <input className={styles.formControl} type="number" placeholder="金額（負數為扣除）"
+                  value={adjAmount} onChange={(e) => setAdjAmount(e.target.value)} style={{ width: "160px" }} />
+                <input className={styles.formControl} placeholder="調整原因（必填，審計用）"
+                  value={adjReason} onChange={(e) => setAdjReason(e.target.value)} style={{ width: "240px" }} />
+                <button className={styles.btn} disabled={adjBusy} onClick={() => void submitAdjust()}>
+                  {adjBusy ? "處理中…" : "送出調整"}
+                </button>
+              </div>
+            )}
+            {adjMsg && <div className={styles.muted} style={{ marginTop: ".5rem" }}>{adjMsg}</div>}
+          </div>
+
           {/* 工具列 */}
           <div className={styles.toolbar} style={{ marginBottom: "1rem", flexWrap: "wrap", gap: "8px" }}>
             <select className={styles.formControl} value={filterType} onChange={handleType} style={{ width: "auto" }}>
@@ -204,15 +284,15 @@ export default function AdminCreditLog(): JSX.Element {
                       <td>{r.member_name}</td>
                       <td style={{ color: "var(--enso-fg,#f5eee0)", opacity: .7 }}>{r.member_phone}</td>
                       <td>
-                        <span className={styles.badge} style={{ background: TYPE_COLOR[r.type] ?? "#555", color: r.type === "earn" ? "#1a1512" : undefined }}>
-                          {TYPE_LABEL[r.type] ?? r.type}
+                        <span className={styles.badge} style={{ background: (r.note ? TYPE_COLOR.manual : TYPE_COLOR[r.type]) ?? "#555", color: r.type === "earn" ? "#1a1512" : undefined }}>
+                          {r.note ? "人工調整" : (TYPE_LABEL[r.type] ?? r.type)}
                         </span>
                       </td>
                       <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", color: r.amount >= 0 ? "var(--enso-gold,#c9a063)" : "#e07070" }}>
                         {fmtNTD(r.amount)}
                       </td>
                       <td style={{ fontSize: ".8rem", opacity: .7 }}>
-                        {r.order_id ? r.order_id.slice(0, 8) + "…" : "—"}
+                        {r.order_id ? r.order_id.slice(0, 8) + "…" : (r.note ? r.note : "—")}
                       </td>
                       <td style={{ fontSize: ".85rem", opacity: .7 }}>
                         {r.expires_at ? r.expires_at.slice(0, 10) : "—"}

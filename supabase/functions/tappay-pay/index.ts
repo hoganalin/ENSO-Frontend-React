@@ -46,13 +46,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
   try {
     const { data: orderData, error: orderError } = await admin
       .from("orders")
-      .select("id, order_no, buyer_id, status, subtotal, discount, shipping_fee, total, checkout_source, recipient")
+      .select("id, order_no, buyer_id, status, subtotal, discount, shipping_fee, total, credit_used, checkout_source, recipient")
       .eq("id", orderId).maybeSingle();
     if (orderError) throw new Error(orderError.message);
     if (!orderData) return errorResponse(req, 404, "order_not_found", "找不到這筆訂單");
     const order = orderData as {
       id: string; order_no: string; buyer_id: string | null; status: string;
-      subtotal: number; discount: number; shipping_fee: number; total: number;
+      subtotal: number; discount: number; shipping_fee: number; total: number; credit_used: number;
       checkout_source: string | null; recipient: Record<string, string> | null;
     };
     if (order.buyer_id !== userId) return errorResponse(req, 404, "order_not_found", "找不到這筆訂單");
@@ -111,7 +111,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       name: rcpt["name"] || "顧客",
       email: rcpt["email"] || "noreply@example.com",
     };
-    const details = `ENSO 訂單 ${order.order_no}`.slice(0, 100);
+    const details = `Queen Maeve 訂單 ${order.order_no}`.slice(0, 100);
 
     // ───────── LINE Pay（非同步：回 payment_url，由 webhook 結算）─────────
     if (method === "linepay") {
@@ -120,7 +120,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       if (!siteUrl || !supabaseUrl) {
         return errorResponse(req, 500, "misconfigured", "LINE Pay 轉導網址未設定（SITE_URL / SUPABASE_URL）");
       }
-      const result = await payByPrime(cfg, {
+      const result = await payByPrime({ ...cfg, merchantId: cfg.lineMerchantId }, {
         prime, amount, orderNumber: merchantTradeNo, details, cardholder,
         resultUrl: {
           frontend_redirect_url: `${siteUrl}/payment/${order.id}?pay=linepay`,

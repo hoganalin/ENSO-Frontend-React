@@ -96,7 +96,7 @@ const Login = (): JSX.Element => {
 
       <div className="enso-auth__card">
         <div className="t-eyebrow" style={{ textAlign: "center" }}>Sign In</div>
-        <h2 className="enso-auth__title">登入 <span className="accent">ENSO</span></h2>
+        <h2 className="enso-auth__title">登入 <span className="accent">Queen Maeve</span></h2>
         <p className="enso-auth__sub">歡迎回來，請登入您的帳號。</p>
 
         <KanjiDivider kanji="入" />

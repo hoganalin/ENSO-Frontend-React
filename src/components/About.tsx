@@ -1,13 +1,12 @@
 import { Link } from "react-router";
 
 import { EnsoCircle, KanjiDivider } from "./atoms";
-import GardenParallaxSection from "./About/GardenParallaxSection";
 
 const VOWS = [
-  { kanji: "選", title: "選原料", copy: "日本、印度、斯里蘭卡有機認證農場直採。一支香的純度，從原料就決定了。" },
-  { kanji: "捲", title: "手工捲", copy: "工匠以雙手捲製，無機器擠壓。每一支線香的密度與粗細，都是時間的痕跡。" },
-  { kanji: "陰", title: "陰乾百日", copy: "九十至一百二十天的陰乾，讓香自己跟京都的氣候對話，急不得。" },
-  { kanji: "檢", title: "檢驗百次", copy: "每一批香都要經過七次燃燒測試與感官評鑑，才允許離開工房。" },
+  { kanji: "財", title: "招財", copy: "流動的金色頻率，為事業與財路鋪一條亮路。" },
+  { kanji: "緣", title: "桃花", copy: "柔軟而明亮的粉調，牽引良緣與善意的相遇。" },
+  { kanji: "貴", title: "貴人", copy: "沉穩的木質基底，召喚扶持你的那些人。" },
+  { kanji: "淨", title: "淨化", copy: "清透的月光氣息，洗去雜訊，留下澄明。" },
 ];
 
 function About(): JSX.Element {
@@ -19,30 +18,31 @@ function About(): JSX.Element {
         </div>
         <div className="t-eyebrow">Our Story</div>
         <h1 className="enso-about__title">
-          香、是時間的<span className="accent">藝術</span>
+          香氣，是看不見的<span className="accent">磁場</span>
         </h1>
         <p className="enso-about__sub">
-          ENSO，圓相。代表禪宗中「完整」與「空無」的共存。
-          每一縷香煙，都是一次回歸當下的邀請。
+          Queen Maeve 王后美芙，以西方星辰美學與 285Hz 再生頻率調香的能量香氛。
+          每一次噴灑，都是為你的磁場重新定位的邀請。
         </p>
       </header>
 
       <section className="enso-about__story">
-        <KanjiDivider kanji="縁" />
+        <KanjiDivider kanji="緣" />
         <p>
-          創辦人旅居京都期間，深受傳統香道啟發，在百年老舖中第一次體驗到香氣對心靈的深刻影響。
-          2018 年回台後，於京都伏見設立工房，開始以四項約束製香——
-          選原料、捲手作、陰乾百日、檢驗百次。
+          我們相信，香氣不只是氣味，而是一張看不見的能量藍圖。
+          以 285Hz「再生之頻」校準每一支配方的能量基調，
+          修復、安定，重整你與空間的共振。
         </p>
         <p>
-          每一支 ENSO 線香，都是工匠以雙手捲製，選用日本、印度與斯里蘭卡有機認證原料，
-          配合自家開發的低煙配方，讓香氛更適合現代生活。
+          精選植萃與能量香調，為日常儀式注入光——
+          讓好運、桃花與貴人，循著你的光而來。
         </p>
+        {/* TODO(品牌)：此段為示意文案，請替換為生展創意／王后美芙的正式品牌故事 */}
       </section>
 
       <section className="enso-about__vows">
-        <div className="t-eyebrow" style={{ textAlign: "center" }}>Our Four Vows</div>
-        <h2 className="enso-about__vows-title">四つの<span className="accent">約束</span></h2>
+        <div className="t-eyebrow" style={{ textAlign: "center" }}>Four Celestial Houses</div>
+        <h2 className="enso-about__vows-title">四相<span className="accent">能量</span></h2>
         <div className="enso-about__vows-grid">
           {VOWS.map((v) => (
             <div key={v.kanji} className="enso-about__vow" data-aos="fade-up">
@@ -54,15 +54,14 @@ function About(): JSX.Element {
         </div>
       </section>
 
-      <GardenParallaxSection />
-
       <section className="enso-about__cta">
         <KanjiDivider kanji="香" />
-        <h2 className="enso-about__cta-title">開始你的<span className="accent">香氣旅程</span></h2>
-        <p>讓香氣成為你日常靜心的開始。</p>
-        <Link to="/product" className="btn-gold">探索全部線香</Link>
+        <h2 className="enso-about__cta-title">開始你的<span className="accent">能量旅程</span></h2>
+        <p>讓香氣成為你日常點亮磁場的開始。</p>
+        <Link to="/product" className="btn-gold">探索全部香氛</Link>
       </section>
     </div>
   );
 }
+
 export default About;

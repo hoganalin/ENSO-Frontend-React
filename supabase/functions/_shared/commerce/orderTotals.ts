@@ -11,7 +11,7 @@ import {
 } from "./promotions.ts";
 import type { MemberTier } from "./promotions.ts";
 
-export const SHIPPING_BASE = 150;
+export const SHIPPING_BASE = 0; // 無寄送服務，一律自取，故運費為 0
 
 export interface CheckoutItem {
   productId: string;

@@ -55,3 +55,9 @@ supabase/.temp/
 
 # 本 session 的暫存／備份檔（可整個資料夾刪除）
 _to_delete/
+
+# 備份／壓縮檔（不進版控）
+*.tgz
+*.bak
+*.ensobak2
+__MACOSX/

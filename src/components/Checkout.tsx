@@ -145,7 +145,8 @@ const Checkout = (): JSX.Element => {
 
   // 購物金折抵金額（最多折抵至 $0，不能為負）
   const creditUsed = useMemo(
-    () => (useCreditChecked && totals ? Math.min(creditBalance, totals.total) : 0),
+    // 至少保留 NT$1 給金流收款（與伺服器端夾限一致）；實際折抵以伺服器回傳的 order 為準。
+    () => (useCreditChecked && totals ? Math.min(creditBalance, Math.max(totals.total - 1, 0)) : 0),
     [useCreditChecked, creditBalance, totals],
   );
 
@@ -169,8 +170,8 @@ const Checkout = (): JSX.Element => {
         recipient,
         // 此情境僅供預覽相容；伺服器會重新讀取真實會員資料。
         memberContext: memberContext ?? undefined,
-        // TODO: 將 creditAmount 傳給 edge function（checkout-create）由伺服器端扣除，
-        //       可避免競態條件，需改 placeOrder() 介面與 Supabase function 的參數接收。
+        // 購物金折抵：交由 checkout-create 伺服器端驗餘額、夾限並反映到 order.total。
+        creditUsed: useCreditChecked ? creditUsed : 0,
       });
 
       if (!order?.id) {
@@ -181,14 +182,7 @@ const Checkout = (): JSX.Element => {
       dispatch(clearCart());
       dispatch(clearCouponCode());
 
-      // 購物金折抵（client-side）；若 spendCredit 失敗僅警告，不阻擋訂單流程
-      if (useCreditChecked && creditUsed > 0) {
-        try {
-          await db.storeCredit.spendCredit(userId, creditUsed, Date.now());
-        } catch (creditErr: unknown) {
-          console.warn("[storeCredit] 扣除購物金失敗，訂單仍成立:", creditErr);
-        }
-      }
+      // 購物金折抵已於 checkout-create 伺服器端處理（實際 spend 於付款結算時才寫入 ledger）。
 
       await Swal.fire({
         icon: "success",
@@ -267,9 +261,9 @@ const Checkout = (): JSX.Element => {
             ))}
 
           <div>
-            <span>運費：</span>
+            <span>{totals.shippingFee === 0 ? "取貨方式：" : "運費："}</span>
             <span>
-              {totals.shippingFee === 0 ? "免運" : `NT$${currency(totals.shippingFee)}`}
+              {totals.shippingFee === 0 ? "到店自取・免運" : `NT$${currency(totals.shippingFee)}`}
             </span>
           </div>
 

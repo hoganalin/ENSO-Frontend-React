@@ -54,12 +54,11 @@ const Contact = (): JSX.Element => {
       <div className="enso-contact__grid">
         <aside className="enso-contact__info">
           <div className="t-eyebrow">Studio</div>
-          <h2>京都・伏見<br />ENSO Atelier</h2>
+          <h2>Queen Maeve<br />王后美芙</h2>
+          {/* TODO(品牌)：聯絡資訊待提供後補上 */}
           <dl>
-            <div><dt>Address</dt><dd>京都市伏見区深草1-1-1</dd></div>
-            <div><dt>Hours</dt><dd>火 – 日 · 11:00 – 19:00</dd></div>
-            <div><dt>Email</dt><dd>hello@enso.com</dd></div>
-            <div><dt>Phone</dt><dd>+81 75-XXX-XXXX</dd></div>
+            <div><dt>Email</dt><dd>（待提供）</dd></div>
+            <div><dt>Line</dt><dd>（待提供）</dd></div>
           </dl>
         </aside>
 

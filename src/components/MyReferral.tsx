@@ -36,7 +36,7 @@ const CREDIT_LABEL: Record<CreditTx["type"], string> = {
   expire: "效期到期",
 };
 const creditSigned = (t: CreditTx): number =>
-  t.type === "earn" || t.type === "reverse" ? t.amount : -t.amount;
+  t.type === "earn" ? t.amount : -t.amount;
 
 export default function MyReferral(): JSX.Element {
   usePageTitle("我的推薦");
@@ -49,9 +49,12 @@ export default function MyReferral(): JSX.Element {
   const [balance, setBalance] = useState(0);
   const [ledger, setLedger] = useState<CreditTx[]>([]);
   const [copied, setCopied] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const [copyError, setCopyError] = useState(false);
 
   useEffect(() => {
     let active = true;
+    setLoading(true); setError(null);
     (async () => {
       try {
         const p = await getCurrentProfile();
@@ -83,15 +86,16 @@ export default function MyReferral(): JSX.Element {
       }
     })();
     return () => { active = false; };
-  }, []);
+  }, [attempt]);
 
   const handleCopy = async (): Promise<void> => {
     if (!code) return;
+    setCopyError(false);
     try {
       await navigator.clipboard.writeText(code);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch { /* 剪貼簿不可用時不阻擋 */ }
+    } catch { setCopyError(true); }
   };
 
   const handleExport = (): void => {
@@ -111,7 +115,7 @@ export default function MyReferral(): JSX.Element {
       })),
     );
     const today = new Date().toISOString().slice(0, 10);
-    exportExcel(`ENSO推薦名單_${today}.xlsx`, [
+    exportExcel(`QueenMaeve推薦名單_${today}.xlsx`, [
       { name: "名單彙總", rows: summary },
       { name: "訂單明細", rows: detail },
     ]);
@@ -128,6 +132,7 @@ export default function MyReferral(): JSX.Element {
     return (
       <MemberShell title="我的推薦">
         <div className={styles.error} role="alert">{error}</div>
+        <button className={styles.button} onClick={() => setAttempt(n => n + 1)}>重新讀取推薦資料</button>
       </MemberShell>
     );
   }
@@ -148,6 +153,7 @@ export default function MyReferral(): JSX.Element {
 
   return (
     <MemberShell title="我的推薦">
+      {copyError && <p role="status">無法使用剪貼簿，請手動複製推薦碼：{code}</p>}
       {/* 等級標示 */}
       <p style={{ margin: "0 0 1.5rem" }}>
         目前身份：

@@ -230,10 +230,16 @@ function Cart(): JSX.Element {
             </div>
           ))}
 
+          {carts.length === 0 && <div role="status" className="my-4">
+            <p>購物車目前沒有商品。</p>
+            <Link to="/product" className="btn-ghost">前往選購商品</Link>
+          </div>}
           {/* 優惠碼 */}
           <div className="flex my-4">
             <input
               type="text"
+              aria-label="優惠碼"
+              style={{ minWidth: 0 }}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg outline-none focus:ring-2 focus:ring-enso-primary"
               placeholder="有優惠碼嗎"
               value={couponInput}
