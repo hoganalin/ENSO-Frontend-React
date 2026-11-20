@@ -703,3 +703,20 @@
 @keyframes adminSpin {
   to { transform: rotate(360deg); }
 }
+
+/* 後台登出按鈕 */
+.logoutBtn {
+  background: transparent;
+  border: 1px solid rgba(214, 190, 138, 0.45);
+  color: #d6be8a;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.logoutBtn:hover {
+  background: rgba(214, 190, 138, 0.15);
+  color: #f0e4c4;
+}

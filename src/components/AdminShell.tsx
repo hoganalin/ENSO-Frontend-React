@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode, type JSX } from "react";
 import { NavLink, ScrollRestoration } from "react-router";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { getCurrentProfile } from "@/services/db/auth";
+import { getCurrentProfile, signOut } from "@/services/db/auth";
 import type { ProfileRow } from "@/services/db/types";
 import MessageToast from "@/components/MessageToast";
 import styles from "@/styles/Admin.module.css";
@@ -84,6 +84,11 @@ export default function AdminShell({ title, children }: Props): JSX.Element {
 
   const initials = profile?.name ? profile.name.slice(0, 1) : "A";
 
+  async function handleLogout(): Promise<void> {
+    try { await signOut(); } catch { /* 忽略錯誤，仍導回首頁 */ }
+    window.location.assign("/");
+  }
+
   return (
     <>
       <ScrollRestoration />
@@ -143,6 +148,7 @@ export default function AdminShell({ title, children }: Props): JSX.Element {
             <h1 className={styles.topbarTitle}>{title}</h1>
             <div className={styles.topbarMeta}>
               <div className={styles.topbarDate}>{dateStr}</div>
+              <button type="button" className={styles.logoutBtn} onClick={handleLogout} title="登出後台">⎋ 登出</button>
             </div>
           </div>
           <div className={styles.content}>{children}</div>
