@@ -166,6 +166,12 @@ export async function payWithTappay(
   });
   if (error) throw await toPaymentError(error);
   if (!data?.success) throw new PaymentError("invalid_response", "付款服務回應格式異常");
+  // 需 3D 驗證：轉導持卡人到發卡行 OTP 頁，完成後由 tappay-notify webhook 入帳。
+  // 轉導後回傳一個永不 resolve 的 Promise，避免呼叫端在跳轉前誤判成功。
+  if (data.paymentUrl) {
+    window.location.href = data.paymentUrl;
+    return new Promise<never>(() => {});
+  }
   return { orderNo: data.orderNo ?? "", recTradeId: data.recTradeId ?? "" };
 }
 

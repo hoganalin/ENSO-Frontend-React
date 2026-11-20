@@ -34,7 +34,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // 1) 找到本地交易（我方在發起 LINE Pay 時已把 rec_trade_id 存進 gateway_trade_no）
     const { data: txData, error: txErr } = await admin
       .from("payment_transactions")
-      .select("merchant_trade_no, amount, status, provider")
+      .select("merchant_trade_no, amount, status, provider, payment_type")
       .eq("gateway_trade_no", recTradeId)
       .eq("provider", "tappay")
       .maybeSingle();
@@ -44,7 +44,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       console.warn(`[tappay-notify] 查無交易 rec_trade_id=${recTradeId}`);
       return ok("unknown tx");
     }
-    const tx = txData as { merchant_trade_no: string; amount: number; status: string; provider: string };
+    const tx = txData as { merchant_trade_no: string; amount: number; status: string; provider: string; payment_type: string | null };
     if (tx.status === "paid") return ok("already settled"); // 冪等
 
     // 2) 向 TapPay 查證權威狀態（不信任通知本身）
@@ -67,7 +67,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       p_merchant_trade_no: tx.merchant_trade_no,
       p_gateway_trade_no: paid ? recTradeId : "",
       p_amount: tx.amount,
-      p_payment_type: "TapPay-LinePay",
+      p_payment_type: tx.payment_type ?? "TapPay-LinePay",
       p_paid: paid,
       p_payload: record.raw,
     });

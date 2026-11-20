@@ -137,25 +137,57 @@ Deno.serve(async (req: Request): Promise<Response> => {
       return jsonResponse(req, { success: true, method: "linepay", paymentUrl: result.paymentUrl, recTradeId: result.recTradeId });
     }
 
-    // ───────── 信用卡（同步：直接結算）─────────
-    const result = await payByPrime(cfg, { prime, amount, orderNumber: merchantTradeNo, details, cardholder });
-    const paid = result.status === 0;
+    // ───────── 信用卡（3D 驗證：轉導持卡人完成 OTP，webhook 查證後結算）─────────
+    const cardSiteUrl = (Deno.env.get("SITE_URL") ?? "").replace(/\/$/, "");
+    const cardSupabaseUrl = (Deno.env.get("SUPABASE_URL") ?? "").replace(/\/$/, "");
+    if (!cardSiteUrl || !cardSupabaseUrl) {
+      return errorResponse(req, 500, "misconfigured", "付款轉導網址未設定（SITE_URL / SUPABASE_URL）");
+    }
+    const result = await payByPrime(cfg, {
+      prime, amount, orderNumber: merchantTradeNo, details, cardholder,
+      threeDomainSecure: true,
+      resultUrl: {
+        frontend_redirect_url: `${cardSiteUrl}/payment/${order.id}?pay=card`,
+        backend_notify_url: `${cardSupabaseUrl}/functions/v1/tappay-notify`,
+      },
+    });
+
+    // 被 TapPay／發卡行拒絕（未過 3DS、decline 等）→ 記錄失敗嘗試後回報。
+    if (result.status !== 0) {
+      await admin.rpc("settle_ecpay_payment", {
+        p_merchant_trade_no: merchantTradeNo, p_gateway_trade_no: "",
+        p_amount: amount, p_payment_type: "TapPay-CreditCard", p_paid: false, p_payload: result.raw,
+      }).catch((e: unknown) => console.error("[tappay-pay] 失敗記錄寫入失敗", e));
+      return errorResponse(req, 402, "payment_declined", `付款失敗：${result.msg}`);
+    }
+
+    // status === 0 且有 payment_url → 需 3D 驗證：記 rec_trade_id，狀態維持 pending，交由 webhook 結算。
+    if (result.paymentUrl) {
+      if (!result.recTradeId) {
+        console.error(`[tappay-pay] 3DS 無 rec_trade_id order=${order.order_no}`);
+        return errorResponse(req, 502, "gateway_error", "付款閘道回應異常，請聯繫客服確認");
+      }
+      await admin.from("payment_transactions")
+        .update({ gateway_trade_no: result.recTradeId, payment_type: "TapPay-CreditCard", raw_notify: result.raw })
+        .eq("merchant_trade_no", merchantTradeNo);
+      return jsonResponse(req, { success: true, method: "card", requires3ds: true, paymentUrl: result.paymentUrl, recTradeId: result.recTradeId });
+    }
+
+    // status === 0 但無 payment_url（frictionless／免驗證直接成功）→ 立即結算。
     const gatewayTradeNo = result.recTradeId;
-    if (paid && !gatewayTradeNo) {
+    if (!gatewayTradeNo) {
       console.error(`[tappay-pay] 成功卻無 rec_trade_id order=${order.order_no}`);
       return errorResponse(req, 502, "gateway_error", "付款閘道回應異常，請聯繫客服確認");
     }
     const { data: settleData, error: settleErr } = await admin.rpc("settle_ecpay_payment", {
       p_merchant_trade_no: merchantTradeNo,
-      p_gateway_trade_no: paid ? gatewayTradeNo : "",
-      p_amount: amount, p_payment_type: "TapPay-CreditCard", p_paid: paid, p_payload: result.raw,
+      p_gateway_trade_no: gatewayTradeNo,
+      p_amount: amount, p_payment_type: "TapPay-CreditCard", p_paid: true, p_payload: result.raw,
     });
     if (settleErr) {
       console.error(`[tappay-pay] 結算失敗 order=${order.order_no} rec_trade_id=${gatewayTradeNo}`, settleErr);
-      if (paid) return errorResponse(req, 500, "settlement_error", "付款已完成但訂單更新失敗，請截圖並聯繫客服");
-      return errorResponse(req, 402, "payment_declined", `付款失敗：${result.msg}`);
+      return errorResponse(req, 500, "settlement_error", "付款已完成但訂單更新失敗，請截圖並聯繫客服");
     }
-    if (!paid) return errorResponse(req, 402, "payment_declined", `付款失敗：${result.msg}`);
 
     const settlement = (settleData ?? {}) as { outcome?: string };
     if (settlement.outcome === "settled") {

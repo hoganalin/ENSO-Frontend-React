@@ -15,6 +15,8 @@ export default function PaymentPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const [searchParams] = useSearchParams();
   const fromLinePay = searchParams.get("pay") === "linepay";
+  const fromCard = searchParams.get("pay") === "card";
+  const fromAsyncPay = fromLinePay || fromCard;
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [items, setItems] = useState<OrderItemRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,12 +58,12 @@ export default function PaymentPage() {
   // 從 LINE Pay 導回後，付款入帳是非同步的（webhook）。若訂單仍為待付款，自動重試幾次。
   const linePayPolls = useRef(0);
   useEffect(() => {
-    if (!fromLinePay || loading) return;
-    if (order && order.status === "pending" && linePayPolls.current < 4) {
+    if (!fromAsyncPay || loading) return;
+    if (order && order.status === "pending" && linePayPolls.current < 6) {
       const t = setTimeout(() => { linePayPolls.current += 1; void refresh(); }, 2500);
       return () => clearTimeout(t);
     }
-  }, [fromLinePay, loading, order, refresh]);
+  }, [fromAsyncPay, loading, order, refresh]);
 
   return <main className={styles.paymentContainer}>
     <section className={styles.paymentCard} aria-busy={loading}>
@@ -84,7 +86,7 @@ export default function PaymentPage() {
           </section>}
           {((justPaid && order.status === "paid")) && <p className={styles.tappayPaid} role="status">付款成功，感謝您的購買！</p>}
           {order.status === "pending" ? <>
-            {fromLinePay && <p className={styles.tappayNote} role="status">LINE Pay 付款確認中…若已於 LINE 完成付款，請稍候或按下方「更新訂單狀態」。</p>}
+            {fromAsyncPay && <p className={styles.tappayNote} role="status">付款確認中…若已完成驗證付款，請稍候或按下方「更新訂單狀態」。</p>}
             <p>請選擇付款方式：</p>
             <h2 style={{ fontSize: "1.1rem", marginTop: "1rem" }}>信用卡</h2>
             <TapPayCardForm orderId={order.id} amount={order.total} onPaid={handlePaid} />

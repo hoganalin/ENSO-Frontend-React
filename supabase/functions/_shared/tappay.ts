@@ -32,7 +32,9 @@ export interface PayByPrimeInput {
   orderNumber: string;
   details: string;
   cardholder: { phone_number: string; name: string; email: string };
-  /** 電子支付（如 LINE Pay）必填：付款完成後前端轉導 + 後端 server-to-server 通知。 */
+  /** 信用卡 3D 驗證：帶 true 時 TapPay 會回 payment_url，需轉導持卡人完成 OTP 驗證。 */
+  threeDomainSecure?: boolean;
+  /** 電子支付（如 LINE Pay）與信用卡 3DS 必填：付款完成後前端轉導 + 後端 server-to-server 通知。 */
   resultUrl?: { frontend_redirect_url: string; backend_notify_url: string };
 }
 
@@ -63,6 +65,7 @@ export async function payByPrime(
     cardholder: input.cardholder,
     remember: false,
   };
+  if (input.threeDomainSecure) body.three_domain_secure = true;
   if (input.resultUrl) body.result_url = input.resultUrl;
 
   const res = await fetch(`${cfg.apiBase}/tpc/payment/pay-by-prime`, {
