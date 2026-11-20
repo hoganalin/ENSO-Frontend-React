@@ -84,9 +84,10 @@ export default function PaymentPage() {
               <span>NT${(item.unit_price * item.qty).toLocaleString()}</span>
             </li>)}</ul>
           </section>}
-          {((justPaid && order.status === "paid")) && <p className={styles.tappayPaid} role="status">付款成功，感謝您的購買！</p>}
-          {order.status === "pending" ? <>
-            {fromAsyncPay && <p className={styles.tappayNote} role="status">付款確認中…若已完成驗證付款，請稍候或按下方「更新訂單狀態」。</p>}
+          {((justPaid || fromAsyncPay) && order.status === "paid") && <p className={styles.tappayPaid} role="status">付款成功，感謝您的購買！</p>}
+          {order.status === "pending" ? (fromAsyncPay ? (
+            <p className={styles.tappayNote} role="status">付款確認中…完成銀行驗證後約數秒內會更新為「已付款」。若遲遲未更新，請按下方「更新訂單狀態」，或重新整理本頁再試一次。</p>
+          ) : <>
             <p>請選擇付款方式：</p>
             <h2 style={{ fontSize: "1.1rem", marginTop: "1rem" }}>信用卡</h2>
             <TapPayCardForm orderId={order.id} amount={order.total} onPaid={handlePaid} />
@@ -95,7 +96,7 @@ export default function PaymentPage() {
               {linePaying ? "前往 LINE Pay…" : "使用 LINE Pay 付款"}
             </button>
             {linePayError && <p className={styles.errorDetails} role="alert">{linePayError}</p>}
-          </> : <p>{["paid", "shipped", "completed"].includes(order.status) ? "此訂單已完成付款，無需再次支付。" : "此訂單無法付款。"}</p>}
+          </>) : <p>{["paid", "shipped", "completed"].includes(order.status) ? "此訂單已完成付款，無需再次支付。" : "此訂單無法付款。"}</p>}
           <OrderGifts key={`gifts-${order.id}`} orderId={order.id} />
           <RefundRequest key={order.id} orderId={order.id} total={order.total} eligible={["paid", "shipped", "completed"].includes(order.status)} />
         </>}

@@ -246,7 +246,7 @@ export default function AdminRefunds(): JSX.Element {
           </div>
 
           <p className={styles.muted} style={{ marginTop: "1rem", fontSize: ".8rem" }}>
-            ⚠️ 執行退款僅更新系統狀態，實際款項請透過 TapPay 後台或銀行端操作退款。
+            執行退款會自動向 TapPay 申請退款，成功後更新訂單為已退款、回沖推薦金與買家購物金；分期交易僅支援全額退款。
           </p>
         </>
       )}
