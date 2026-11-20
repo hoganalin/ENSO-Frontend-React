@@ -196,7 +196,7 @@ function Header(): JSX.Element {
               onClick={() => setNavLoadingLabel("前往購物車…")}
             >
               <i className="fa-solid fa-cart-shopping" />
-              <span className="label">籠 · {cartTotalQty}</span>
+              <span className="label">{cartTotalQty}</span>
             </Link>
 
             <button
