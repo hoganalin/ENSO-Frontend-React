@@ -54,8 +54,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
       return ok("not found at gateway");
     }
 
-    const paid = record.recordStatus === 1; // 1 = 交易完成
-    const pending = record.recordStatus === 0 || record.recordStatus === 4; // 授權未請款 / 待付款
+    // TapPay 預設 delay_capture_in_days=0（當天自動請款），故「已授權(AUTH=0)」即視為付款成功，
+    // 不必等到批次請款完成(OK=1)；否則信用卡 3DS 交易會永遠停在待付款、訂單無法入帳。
+    const paid = record.recordStatus === 0 || record.recordStatus === 1; // 0=AUTH(已授權,當天自動請款) 1=OK(已完成)
+    const pending = record.recordStatus === 4; // 4=PENDING 待付款（3DS 未完成/銀行重試未授權成功）
 
     if (pending) {
       // 尚未真正完成 → 不結算，回 200（TapPay 之後會再通知或由 Record 對帳補）。

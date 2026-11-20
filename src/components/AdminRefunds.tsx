@@ -47,6 +47,7 @@ export default function AdminRefunds(): JSX.Element {
   const [error, setError]       = useState<string | null>(null);
   const [filterStatus, setFilter] = useState<"pending_refund" | "refunded">("pending_refund");
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -102,10 +103,12 @@ export default function AdminRefunds(): JSX.Element {
   }, []);
 
   // 執行退款：走後端 edge function（service_role 完成全額退款 + 回沖推薦金 + 退還買家購物金）
-  async function handleRefund(orderId: string): Promise<void> {
+  async function handleRefund(order: RefundOrder): Promise<void> {
+    const orderId = order.id;
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, processing: true } : o));
     setConfirmId(null);
     setError(null);
+    setSuccessMsg(null);
     const { error: err } = await supabase.functions.invoke("admin-order-action", {
       body: { action: "full_refund", orderId },
     });
@@ -119,6 +122,8 @@ export default function AdminRefunds(): JSX.Element {
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, processing: false } : o));
     } else {
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: "refunded", processing: false } : o));
+      setSuccessMsg(`訂單 ${order.order_no} 已成功退款 ${fmtNTD(order.total)}，款項已向 TapPay 申請退回。`);
+      window.setTimeout(() => setSuccessMsg(null), 6000);
     }
   }
 
@@ -133,6 +138,11 @@ export default function AdminRefunds(): JSX.Element {
   return (
     <AdminShell title="退款管理">
       {loading && <p className={styles.muted}>載入中…</p>}
+      {successMsg && (
+        <div role="status" style={{ background: "#1f4d2e", border: "1px solid #3c8a56", color: "#d8f5e2", padding: "10px 14px", borderRadius: "8px", margin: "0 0 14px", fontSize: ".95rem", display: "flex", alignItems: "center", gap: "8px" }}>
+          <span aria-hidden="true">✓</span>{successMsg}
+        </div>
+      )}
       {error   && <div className={styles.alert}>{error}</div>}
 
       {!loading && !error && profile && (
@@ -204,12 +214,15 @@ export default function AdminRefunds(): JSX.Element {
                       <td style={{ fontSize: ".85rem", opacity: .7 }}>{o.created_at.slice(0, 10)}</td>
                       {filterStatus === "pending_refund" && (
                         <td>
-                          {confirmId === o.id ? (
+                          {o.processing ? (
+                            <button className={`${styles.btn} ${styles.btnSm}`} disabled aria-busy="true">
+                              <span className={styles.spinner} aria-hidden="true" /> 退款中…
+                            </button>
+                          ) : confirmId === o.id ? (
                             <span style={{ display: "flex", gap: "6px" }}>
                               <button
                                 className={`${styles.btn} ${styles.btnSm} ${styles.btnDanger}`}
-                                disabled={o.processing}
-                                onClick={() => handleRefund(o.id)}
+                                onClick={() => handleRefund(o)}
                               >
                                 確認退款
                               </button>
@@ -223,10 +236,9 @@ export default function AdminRefunds(): JSX.Element {
                           ) : (
                             <button
                               className={`${styles.btn} ${styles.btnSm}`}
-                              disabled={o.processing}
                               onClick={() => setConfirmId(o.id)}
                             >
-                              {o.processing ? "處理中…" : "執行退款"}
+                              執行退款
                             </button>
                           )}
                         </td>
