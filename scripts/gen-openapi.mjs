@@ -1,10 +1,9 @@
 // 產生 openapi.json:抓本機 PostgREST 的自動 OpenAPI(資料表端點),再手動補上 Edge Functions。
 // 本專案沒有「現成 OpenAPI 產生器」,這支就是它的替代。需本機 supabase start。
 import { writeFileSync } from "node:fs";
+import { getLocalConfig } from "./_local-supabase.mjs";
 
-const URL = process.env.TEST_SUPABASE_URL || "http://127.0.0.1:54321";
-const ANON = process.env.TEST_SUPABASE_ANON_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlLWRlbW8iLCJpYXQiOjE2NDE3NjkyMDAsImV4cCI6MTc5OTUzNTYwMH0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE";
+const { url: URL, anon: ANON } = getLocalConfig();
 
 async function main() {
   const res = await fetch(`${URL}/rest/v1/`, { headers: { apikey: ANON, Authorization: `Bearer ${ANON}` } });

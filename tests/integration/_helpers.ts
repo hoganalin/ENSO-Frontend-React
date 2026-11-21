@@ -1,19 +1,10 @@
 // 整合測試共用:只連「本機 Supabase」,硬擋正式專案;提供 seed / 清理工具。
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
+import { getLocalConfig } from "../../scripts/_local-supabase.mjs";
 
-const URL = process.env.TEST_SUPABASE_URL || "http://127.0.0.1:54321";
-// 本機 Supabase 的固定 demo 金鑰(非機密,CLI 預設值);可用環境變數覆蓋。
-const ANON = process.env.TEST_SUPABASE_ANON_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlLWRlbW8iLCJpYXQiOjE2NDE3NjkyMDAsImV4cCI6MTc5OTUzNTYwMH0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE";
-const SERVICE = process.env.TEST_SUPABASE_SERVICE_ROLE_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UtZGVtbyIsImlhdCI6MTY0MTc2OTIwMCwiZXhwIjoxNzk5NTM1NjAwfQ.DaYlNEoUrrEn2Ig7tqibS-PHK5vgusbcbo7X36XVt4Q";
-
-// ── 安全紅線:絕不連正式 Supabase ──
-const PROD_REF = "dznzipfuqtpkvklmlywt";
-if (URL.includes(PROD_REF) || !/(127\.0\.0\.1|localhost|\[::1\])/.test(URL)) {
-  throw new Error(`[integration] 拒絕連線非本機 Supabase:${URL}。整合測試只能打本機(supabase start),以免動到正式資料。`);
-}
+// 金鑰自動取自 `supabase status`(新版 sb_secret_/sb_publishable_),含正式 ref 防呆。
+const { url: URL, anon: ANON, service: SERVICE } = getLocalConfig();
 
 export const admin: SupabaseClient = createClient(URL, SERVICE, {
   auth: { persistSession: false, autoRefreshToken: false },

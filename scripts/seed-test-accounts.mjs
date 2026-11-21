@@ -1,14 +1,9 @@
 // 在「本機 Supabase」建立 E2E/整合用的測試帳號(會員 + admin)。冪等:存在就略過。
-// 用法:TEST_SUPABASE_URL / TEST_SUPABASE_SERVICE_ROLE_KEY 可覆蓋,預設本機。
+// 金鑰自動取自 `supabase status`(新版 sb_secret_/sb_publishable_),含正式 ref 防呆。
 import { createClient } from "@supabase/supabase-js";
+import { getLocalConfig } from "./_local-supabase.mjs";
 
-const URL = process.env.TEST_SUPABASE_URL || "http://127.0.0.1:54321";
-const SERVICE = process.env.TEST_SUPABASE_SERVICE_ROLE_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UtZGVtbyIsImlhdCI6MTY0MTc2OTIwMCwiZXhwIjoxNzk5NTM1NjAwfQ.DaYlNEoUrrEn2Ig7tqibS-PHK5vgusbcbo7X36XVt4Q";
-
-if (URL.includes("dznzipfuqtpkvklmlywt") || !/(127\.0\.0\.1|localhost)/.test(URL)) {
-  throw new Error(`拒絕 seed 到非本機 Supabase:${URL}`);
-}
+const { url: URL, service: SERVICE } = getLocalConfig();
 const admin = createClient(URL, SERVICE, { auth: { persistSession: false } });
 
 const accounts = [

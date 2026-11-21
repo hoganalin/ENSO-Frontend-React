@@ -12,8 +12,8 @@
     "test:unit": "vitest run",
     "test:integration": "vitest run -c vitest.integration.config.ts",
     "test:e2e": "playwright test",
-    "postman": "newman run postman/queenmaeve.postman_collection.json -e postman/local.postman_environment.json",
-    "postman:gen": "node scripts/gen-openapi.mjs"
+    "postman": "node scripts/gen-postman-env.mjs && newman run postman/queenmaeve.postman_collection.json -e postman/local.postman_environment.json",
+    "postman:gen": "node scripts/gen-openapi.mjs && node scripts/gen-postman-env.mjs"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",

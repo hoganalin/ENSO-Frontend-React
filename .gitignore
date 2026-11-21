@@ -61,3 +61,7 @@ _to_delete/
 *.bak
 *.ensobak2
 __MACOSX/
+playwright-report/
+test-results/
+supabase/.branches/
+openapi.json
