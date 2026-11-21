@@ -9,7 +9,7 @@ describe("checkout client trust boundary", () => {
     await placeOrder({buyerId:"forged-user",memberTier:"gold",memberContext:{tier:"gold"},
       requestId:"request",items:[{productId:"product",qty:1,title:"forged",unitPrice:1}],recipient,couponCode:"CODE"});
     expect(invoke).toHaveBeenLastCalledWith("checkout-create",{body:{requestId:"request",
-      items:[{productId:"product",qty:1}],recipient,couponCode:"CODE"}});
+      items:[{productId:"product",qty:1}],recipient,couponCode:"CODE",creditUsed:0}});
   });
   it("shows the server validation error for a rejected order", async () => {
     invoke.mockResolvedValueOnce({data:null,error:{context:new Response(JSON.stringify({error:{message:"優惠碼已失效"}}))}});

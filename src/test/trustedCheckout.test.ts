@@ -17,14 +17,14 @@ describe("trusted checkout", () => {
     const request = parseCheckoutRequest(body());
     expect(request.items).toEqual([{ productId: id, qty: 2 }]);
     const { totals } = priceCheckout(request, [product], profile, 0, [promo({ is_auto: true })]);
-    expect(totals.total).toBe(2080);
+    expect(totals.total).toBe(2000);
   });
   it("rejects a coupon that the client falsely claimed to qualify for", () => {
     expect(() => priceCheckout(parseCheckoutRequest({ ...body(), couponCode: "GOLD" }), [product], profile, 0, [promo()])).toThrow("優惠碼");
   });
   it("calculates eligible server discounts using the same engine", () => {
     const request = parseCheckoutRequest({ ...body(), couponCode: "GOLD" });
-    expect(priceCheckout(request, [product], { ...profile, member_tier: "gold" }, 0, [promo()]).totals.total).toBe(1080);
+    expect(priceCheckout(request, [product], { ...profile, member_tier: "gold" }, 0, [promo()]).totals.total).toBe(1000);
   });
   it.each([0, -1, 1.5, 1000, "2", null])("rejects invalid quantity %s", (qty) => {
     expect(() => parseCheckoutRequest({ ...body(), items: [{ productId: id, qty }] })).toThrow();
@@ -56,7 +56,7 @@ describe("trusted distributor pricing", () => {
     const quote = priceCheckout(parseCheckoutRequest(body()), [product], distributor, 0, [], membershipNow);
     expect(quote.items[0].unitPrice).toBe(1000);
     expect(quote.totals.discount).toBe(300);
-    expect(quote.totals.total).toBe(1780);
+    expect(quote.totals.total).toBe(1700);
     expect(quote.totals.appliedPromos).toContainEqual({ id: "distributor-membership", name: "經銷商訂閱優惠", amount: 300 });
   });
   it.each([
@@ -70,7 +70,7 @@ describe("trusted distributor pricing", () => {
     const quote = priceCheckout(parseCheckoutRequest({ ...body(), couponCode: "GOLD" }), [product],
       { ...distributor, member_tier: "gold" }, 0, [promo()], membershipNow);
     expect(quote.totals.discount).toBe(1150);
-    expect(quote.totals.total).toBe(930);
+    expect(quote.totals.total).toBe(850);
   });
   it("ignores client-submitted subscription and discount claims", () => {
     const request = parseCheckoutRequest({ ...body(), role: "distributor", subscription_active: true, distributor_discount_rate: 100 });

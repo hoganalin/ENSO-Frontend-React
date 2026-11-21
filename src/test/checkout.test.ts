@@ -36,7 +36,7 @@ describe("computeOrderTotals — 訂單金額（活動引擎）", () => {
     );
     expect(t.subtotal).toBe(1280);
     expect(t.discount).toBe(0);
-    expect(t.shippingFee).toBe(150);
-    expect(t.total).toBe(1430);
+    expect(t.shippingFee).toBe(0);
+    expect(t.total).toBe(1280);
   });
 });

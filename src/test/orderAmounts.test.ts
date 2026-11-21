@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { validateOrderAmounts } from "../../supabase/functions/_shared/orderAmounts";
 const items = [{ unit_price: 1000, qty: 2 }];
-const order = { subtotal: 2000, discount: 200, shipping_fee: 150, total: 1950 };
+const order = { subtotal: 2000, discount: 200, shipping_fee: 0, total: 1800 };
 describe("payment stored amount contract", () => {
   it("accepts historical gross-subtotal discounted orders", () => expect(validateOrderAmounts(order, items)).toBe(true));
   it("supports free shipping and no discount", () => expect(validateOrderAmounts({ ...order, discount: 0, shipping_fee: 0, total: 2000 }, items)).toBe(true));
