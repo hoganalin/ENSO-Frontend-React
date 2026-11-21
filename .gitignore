@@ -1,1 +1,67 @@
-# Logs\nlogs\n*.log\nnpm-debug.log*\nyarn-debug.log*\nyarn-error.log*\npnpm-debug.log*\nlerna-debug.log*\n\nnode_modules\ndist\ndist-ssr\n*.local\n\n# Environment (keep .env.example tracked, everything else out)\n.env\n.env.*\n!.env.example\n\n# Build outputs\n*.tsbuildinfo\ntmp/\n\n# Vercel CLI metadata (project-id, environment links)\n.vercel\n\n# IDE / Editor\n.vscode/*\n!.vscode/extensions.json\n.idea\n.DS_Store\n*.suo\n*.ntvs*\n*.njsproj\n*.sln\n*.sw?\n\n# Windows NTFS alternate data streams (從外網下載的檔案殘留)\n*:Zone.Identifier\n\n# Claude / AI tooling local overrides\n.claude/settings.local.json\n\n# Test / Coverage\ncoverage/\n.nyc_output/\n\n# Optional cache directories\n.npm\n.eslintcache\n\n.vercel\n.env*.local\nsupabase/.temp/\n\n# 本 session 的暫存／備份檔（可整個資料夾刪除）\n_to_delete/\n\n# 備份／壓縮檔（不進版控）\n*.tgz\n*.bak\n*.ensobak2\n__MACOSX/\nplaywright-report/\ntest-results/\nsupabase/.branches/\nopenapi.json\n.env.e2e\n
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Environment (keep .env.example tracked, everything else out)
+.env
+.env.*
+!.env.example
+
+# Build outputs
+*.tsbuildinfo
+tmp/
+
+# Vercel CLI metadata (project-id, environment links)
+.vercel
+
+# IDE / Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Windows NTFS alternate data streams (從外網下載的檔案殘留)
+*:Zone.Identifier
+
+# Claude / AI tooling local overrides
+.claude/settings.local.json
+
+# Test / Coverage
+coverage/
+.nyc_output/
+
+# Optional cache directories
+.npm
+.eslintcache
+
+.env*.local
+supabase/.temp/
+
+# 本 session 的暫存／備份檔（可整個資料夾刪除）
+_to_delete/
+
+# 備份／壓縮檔（不進版控）
+*.tgz
+*.bak
+*.ensobak2
+__MACOSX/
+playwright-report/
+test-results/
+supabase/.branches/
+openapi.json
+.env.e2e
