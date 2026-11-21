@@ -28,6 +28,8 @@ export default function AdminPromotions(): JSX.Element {
   const [formPriority, setFormPriority] = useState(0);
   const [saving, setSaving]   = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [listError, setListError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -88,6 +90,21 @@ export default function AdminPromotions(): JSX.Element {
     if (!err) setPromos(prev => prev.map(r => r.id === p.id ? { ...r, is_active: !p.is_active } : r));
   };
 
+  const handleDelete = async (p: PromotionRow) => {
+    if (!window.confirm(`確定要刪除優惠「${p.name}」嗎？此動作無法復原。`)) return;
+    setListError(null); setDeletingId(p.id);
+    try {
+      const { error: err } = await supabase.from("promotions").delete().eq("id", p.id);
+      if (err) throw err;
+      setPromos(prev => prev.filter(x => x.id !== p.id));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "刪除失敗";
+      // 外鍵：已被訂單（贈品）使用過的優惠無法刪除，建議改為停用。
+      setListError(/foreign key|violates|referenced/i.test(msg)
+        ? "此優惠已被訂單使用，無法刪除；可改用「停用」。" : msg);
+    } finally { setDeletingId(null); }
+  };
+
   const totalPages = Math.ceil(promos.length / PAGE_SIZE);
   const paged = promos.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
@@ -109,6 +126,7 @@ export default function AdminPromotions(): JSX.Element {
           )}
         </div>
       </div>
+      {listError && <div className={styles.alert} style={{ marginBottom: "1rem" }}>{listError}</div>}
 
       <div className={styles.tableWrap}>
         <table className={styles.table}>
@@ -134,7 +152,13 @@ export default function AdminPromotions(): JSX.Element {
                 </td>
                 <td style={{ textAlign: "right" }}>
                   {profile.role === "admin" && (
-                    <button type="button" className={`${styles.btn} ${styles.btnSm}`} onClick={() => openEdit(p)}>編輯</button>
+                    <div style={{ display: "flex", gap: ".5rem", justifyContent: "flex-end" }}>
+                      <button type="button" className={`${styles.btn} ${styles.btnSm}`} onClick={() => openEdit(p)}>編輯</button>
+                      <button type="button" className={`${styles.btn} ${styles.btnSm} ${styles.btnDanger}`}
+                        onClick={() => handleDelete(p)} disabled={deletingId === p.id}>
+                        {deletingId === p.id ? "刪除中…" : "刪除"}
+                      </button>
+                    </div>
                   )}
                 </td>
               </tr>

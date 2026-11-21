@@ -18,7 +18,6 @@ const STATUS_BG: Record<OrderStatus, string> = {
   pending: "#555", paid: "#2255a0", shipped: "#7a6000",
   completed: "#2e6b3c", cancelled: "#7a2020", refunded: "#005566",
 };
-const ALL_STATUSES: OrderStatus[] = ["pending","paid","shipped","completed","cancelled","refunded"];
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("zh-TW");
 const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("zh-TW");
 
@@ -30,7 +29,19 @@ function parseRecipient(raw: unknown): Recipient {
     tel: typeof r.tel==="string"?r.tel:undefined, address: typeof r.address==="string"?r.address:undefined };
 }
 
-type ExpandedOrder = OrderRow & { items: OrderItemRow[]; itemsLoading: boolean; newStatus: OrderStatus; saving: boolean };
+// 盡量取出 Edge Function 回傳的錯誤訊息（{ error: { message } }）；取不到就回通用訊息。
+async function edgeErrMsg(err: unknown): Promise<string> {
+  const ctx = (err as { context?: { json?: () => Promise<unknown> } }).context;
+  if (ctx && typeof ctx.json === "function") {
+    try {
+      const body = (await ctx.json()) as { error?: { message?: string } };
+      if (body?.error?.message) return body.error.message;
+    } catch { /* ignore */ }
+  }
+  return err instanceof Error ? err.message : "操作失敗";
+}
+
+type ExpandedOrder = OrderRow & { items: OrderItemRow[]; itemsLoading: boolean; saving: boolean };
 
 export default function AdminOrders(): JSX.Element {
   const [loading, setLoading] = useState(true);
@@ -60,7 +71,7 @@ export default function AdminOrders(): JSX.Element {
   const handleToggle = async (order: OrderRow) => {
     const id = order.id;
     if (expanded[id]) { setExpanded(prev => { const n = {...prev}; delete n[id]; return n; }); return; }
-    const entry: ExpandedOrder = { ...order, items: [], itemsLoading: true, newStatus: order.status, saving: false };
+    const entry: ExpandedOrder = { ...order, items: [], itemsLoading: true, saving: false };
     setExpanded(prev => ({ ...prev, [id]: entry }));
     try {
       const { data, error: dbErr } = await supabase.from("order_items").select("*").eq("order_id", id);
@@ -72,16 +83,19 @@ export default function AdminOrders(): JSX.Element {
     }
   };
 
-  const handleSaveStatus = async (orderId: string) => {
-    const entry = expanded[orderId]; if (!entry) return;
+  // 透過後端 service_role 動作改訂單狀態（前台直接寫 orders 會被 guard_checkout_order 擋）。
+  // 親送流程：待付款→取消；已付款/已出貨→標記完成（完成時後端自動扣庫存）。
+  const handleAction = async (orderId: string, action: "cancel" | "complete") => {
+    setError(null);
     setExpanded(prev => ({ ...prev, [orderId]: { ...prev[orderId], saving: true } }));
     try {
-      const { error: dbErr } = await supabase.from("orders").update({ status: entry.newStatus }).eq("id", orderId);
-      if (dbErr) throw dbErr;
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: entry.newStatus } : o));
-      setExpanded(prev => ({ ...prev, [orderId]: { ...prev[orderId], status: entry.newStatus, saving: false } }));
+      const { error: invErr } = await supabase.functions.invoke("admin-order-action", { body: { orderId, action } });
+      if (invErr) throw new Error(await edgeErrMsg(invErr));
+      const newStatus: OrderStatus = action === "cancel" ? "cancelled" : "completed";
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+      setExpanded(prev => ({ ...prev, [orderId]: { ...prev[orderId], status: newStatus, saving: false } }));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "更新狀態失敗");
+      setError(e instanceof Error ? e.message : "操作失敗");
       setExpanded(prev => ({ ...prev, [orderId]: { ...prev[orderId], saving: false } }));
     }
   };
@@ -165,16 +179,26 @@ export default function AdminOrders(): JSX.Element {
                               <p style={{ color: "#c9a063", fontSize: ".7rem", letterSpacing: ".08em", textTransform: "uppercase", marginBottom: ".5rem" }}>更新狀態</p>
                               {canEdit ? (
                                 <div style={{ display: "flex", flexDirection: "column", gap: ".5rem" }}>
-                                  <select className={styles.formControl}
-                                    value={entry.newStatus}
-                                    onChange={e => setExpanded(prev => ({ ...prev, [order.id]: { ...prev[order.id], newStatus: e.target.value as OrderStatus } }))}>
-                                    {ALL_STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
-                                  </select>
-                                  <button type="button" className={`${styles.btn} ${styles.btnPrimary}`}
-                                    onClick={() => handleSaveStatus(order.id)}
-                                    disabled={entry.saving || entry.newStatus === order.status}>
-                                    {entry.saving ? "儲存中…" : "儲存狀態"}
-                                  </button>
+                                  {order.status === "pending" && (
+                                    <button type="button" className={styles.btn}
+                                      onClick={() => handleAction(order.id, "cancel")} disabled={entry.saving}>
+                                      {entry.saving ? "處理中…" : "取消訂單"}
+                                    </button>
+                                  )}
+                                  {(order.status === "paid" || order.status === "shipped") && (
+                                    <button type="button" className={`${styles.btn} ${styles.btnPrimary}`}
+                                      onClick={() => handleAction(order.id, "complete")} disabled={entry.saving}>
+                                      {entry.saving ? "處理中…" : "標記已完成（已交貨）"}
+                                    </button>
+                                  )}
+                                  {order.status === "paid" && (
+                                    <span className={styles.muted} style={{ fontSize: ".72rem", lineHeight: 1.4 }}>
+                                      完成時會自動扣庫存。退款請至「退款管理」。
+                                    </span>
+                                  )}
+                                  {["completed","cancelled","refunded"].includes(order.status) && (
+                                    <span className={styles.muted} style={{ fontSize: ".8rem" }}>此訂單已結案，無需操作。</span>
+                                  )}
                                 </div>
                               ) : (
                                 <span className={styles.badge} style={{ background: STATUS_BG[order.status] }}>{STATUS_LABELS[order.status]}</span>

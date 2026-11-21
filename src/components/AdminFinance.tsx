@@ -3,6 +3,7 @@ import { useEffect, useState, type JSX } from "react";
 import AdminShell from "./AdminShell";
 import { getCurrentProfile } from "@/services/db/auth";
 import { supabase } from "@/lib/supabase";
+import { selectAll } from "@/services/db/selectAll";
 import type { ProfileRow } from "@/services/db/types";
 import styles from "@/styles/Admin.module.css";
 
@@ -69,28 +70,18 @@ export default function AdminFinance(): JSX.Element {
         since.setDate(1);
         since.setHours(0, 0, 0, 0);
 
-        const [creditRes, ordersRes, profilesRes] = await Promise.all([
-          supabase
-            .from("store_credit_ledger")
-            .select("member_id,type,amount,created_at")
-            .gte("created_at", since.toISOString()),
-          supabase
-            .from("orders")
-            .select("id,referrer_id,subtotal,status,completed_at")
-            .in("status", ["completed"]),
-          supabase
-            .from("profiles")
-            .select("id,name,member_tier")
-            .not("referral_code", "is", null),
+        // 分頁撈全部,避開 PostgREST 1000 列上限(破千不再少算)
+        const [credits, orders, profiles] = await Promise.all([
+          selectAll<{ member_id: string; type: string; amount: number; created_at: string }>(() =>
+            supabase.from("store_credit_ledger").select("member_id,type,amount,created_at")
+              .gte("created_at", since.toISOString()).order("created_at", { ascending: true })),
+          selectAll<{ id: string; referrer_id: string | null; subtotal: number; status: string; completed_at: string | null }>(() =>
+            supabase.from("orders").select("id,referrer_id,subtotal,status,completed_at")
+              .in("status", ["completed"]).order("created_at", { ascending: true })),
+          selectAll<{ id: string; name: string | null; member_tier: string }>(() =>
+            supabase.from("profiles").select("id,name,member_tier")
+              .not("referral_code", "is", null).order("created_at", { ascending: true })),
         ]);
-
-        if (creditRes.error)   throw creditRes.error;
-        if (ordersRes.error)   throw ordersRes.error;
-        if (profilesRes.error) throw profilesRes.error;
-
-        const credits  = creditRes.data  ?? [];
-        const orders   = ordersRes.data  ?? [];
-        const profiles = profilesRes.data ?? [];
 
         // ── 購物金月曆 ──────────────────────────────────────────────
         const now = new Date();
@@ -111,7 +102,7 @@ export default function AdminFinance(): JSX.Element {
         setMonthlyCredit(Object.values(monthMap));
 
         // ── 全部購物金餘額估算（earn - spend - expire）──────────────
-        const allCredits: { type: string; amount: number }[] = (creditRes.data ?? []);
+        const allCredits: { type: string; amount: number }[] = credits;
         const balance = allCredits.reduce((s, c) => {
           if (c.type === "earn")   return s + (c.amount ?? 0);
           if (c.type === "spend")  return s - Math.abs(c.amount ?? 0);
@@ -131,10 +122,9 @@ export default function AdminFinance(): JSX.Element {
         }
 
         // 統計每位推薦人的下線人數（orders 中去重 buyer_id 按 referrer_id 分組）
-        const { data: refereesData } = await supabase
-          .from("orders")
-          .select("referrer_id,buyer_id")
-          .not("referrer_id", "is", null);
+        const refereesData = await selectAll<{ referrer_id: string | null; buyer_id: string | null }>(() =>
+          supabase.from("orders").select("referrer_id,buyer_id")
+            .not("referrer_id", "is", null).order("created_at", { ascending: true }));
         const refereeCountMap: Record<string, Set<string>> = {};
         for (const r of (refereesData ?? [])) {
           if (!r.referrer_id || !r.buyer_id) continue;
@@ -144,10 +134,9 @@ export default function AdminFinance(): JSX.Element {
 
         // 推薦購物金（從 store_credit_ledger earn 估算：creditRes 已取所有 earn）
         // 這裡取全期 earn 統計
-        const { data: allEarnData } = await supabase
-          .from("store_credit_ledger")
-          .select("member_id,amount")
-          .eq("type","earn");
+        const allEarnData = await selectAll<{ member_id: string; amount: number }>(() =>
+          supabase.from("store_credit_ledger").select("member_id,amount")
+            .eq("type", "earn").order("created_at", { ascending: true }));
         const earnByMember: Record<string, number> = {};
         for (const e of (allEarnData ?? [])) {
           earnByMember[e.member_id] = (earnByMember[e.member_id] ?? 0) + (e.amount ?? 0);

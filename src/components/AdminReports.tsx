@@ -2,6 +2,7 @@
 import { useEffect, useState, type JSX } from "react";
 import AdminShell from "./AdminShell";
 import { supabase } from "@/lib/supabase";
+import { selectAll } from "@/services/db/selectAll";
 import styles from "@/styles/Admin.module.css";
 
 // ── 型別 ─────────────────────────────────────────────────────────────────────
@@ -64,24 +65,15 @@ export default function AdminReports(): JSX.Element {
         since.setHours(0, 0, 0, 0);
         const sinceIso = since.toISOString();
 
-        // 並行取得訂單 + 購物金
-        const [ordersRes, creditRes] = await Promise.all([
-          supabase
-            .from("orders")
-            .select("id,total,status,paid_at,created_at")
-            .gte("created_at", sinceIso),
-          supabase
-            .from("store_credit_ledger")
-            .select("amount,created_at")
-            .eq("type", "earn")
-            .gte("created_at", sinceIso),
+        // 並行取得訂單 + 購物金(分頁撈全部,避開 PostgREST 1000 列上限 → 破千不再少算)
+        const [orders, credits] = await Promise.all([
+          selectAll<{ id: string; total: number; status: string; paid_at: string | null; created_at: string }>(() =>
+            supabase.from("orders").select("id,total,status,paid_at,created_at")
+              .gte("created_at", sinceIso).order("created_at", { ascending: true })),
+          selectAll<{ amount: number; created_at: string }>(() =>
+            supabase.from("store_credit_ledger").select("amount,created_at")
+              .eq("type", "earn").gte("created_at", sinceIso).order("created_at", { ascending: true })),
         ]);
-
-        if (ordersRes.error) throw ordersRes.error;
-        if (creditRes.error) throw creditRes.error;
-
-        const orders = ordersRes.data ?? [];
-        const credits = creditRes.data ?? [];
 
         // 建立最近 12 個月的月份骨架（由舊到新）
         const now = new Date();
