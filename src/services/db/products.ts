@@ -9,12 +9,16 @@ export const isProductId = (id: unknown): id is string =>
 // 透過 SECURITY DEFINER 函式 product_availability 取得；失敗則保留實體在庫，不影響顯示。
 async function withAvailability<T extends ProductRow>(products: T[]): Promise<T[]> {
   if (!products.length) return products;
-  const ids = products.map(p => p.id);
-  const { data, error } = await supabase.rpc("product_availability", { p_ids: ids });
-  if (error || !data) return products;
-  const avail = new Map<string, number>();
-  for (const r of data as { product_id: string; available: number }[]) avail.set(r.product_id, Number(r.available));
-  return products.map(p => (avail.has(p.id) ? { ...p, inventory: avail.get(p.id)! } : p));
+  try {
+    const ids = products.map(p => p.id);
+    const { data, error } = await supabase.rpc("product_availability", { p_ids: ids });
+    if (error || !data) return products;
+    const avail = new Map<string, number>();
+    for (const r of data as { product_id: string; available: number }[]) avail.set(r.product_id, Number(r.available));
+    return products.map(p => (avail.has(p.id) ? { ...p, inventory: avail.get(p.id)! } : p));
+  } catch {
+    return products; // 任何意外(含測試 mock 無 rpc)一律退回實體在庫,不影響顯示
+  }
 }
 
 export async function listProducts(): Promise<ProductRow[]> {

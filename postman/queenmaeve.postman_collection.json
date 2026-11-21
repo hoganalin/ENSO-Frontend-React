@@ -1,0 +1,85 @@
+{
+  "info": {
+    "name": "Queen Maeve API",
+    "_postman_id": "qm-collection-0001",
+    "description": "Supabase(Auth / Edge Functions / PostgREST)。登入後自動存 JWT 到 {{token}},需授權的 API 自動帶 Bearer。baseUrl 預設本機 supabase。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ] },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:54321" },
+    { "key": "token", "value": "" },
+    { "key": "sessionId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth / 登入(存 JWT 到 token)",
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{baseUrl}}/auth/v1/token?grant_type=password", "host": ["{{baseUrl}}"], "path": ["auth","v1","token"], "query": [ { "key": "grant_type", "value": "password" } ] },
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}" }
+      },
+      "event": [
+        { "listen": "test", "script": { "type": "text/javascript", "exec": [
+          "const j = pm.response.json();",
+          "pm.test('登入成功回傳 access_token', () => pm.expect(j.access_token, JSON.stringify(j)).to.be.a('string'));",
+          "if (j.access_token) {",
+          "  pm.environment.set('token', j.access_token);",
+          "  pm.collectionVariables.set('token', j.access_token);",
+          "}"
+        ] } }
+      ]
+    },
+    {
+      "name": "Edge / checkout-create(建立訂單)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{baseUrl}}/functions/v1/checkout-create", "host": ["{{baseUrl}}"], "path": ["functions","v1","checkout-create"] },
+        "body": { "mode": "raw", "raw": "{\n  \"requestId\": \"{{sessionId}}\",\n  \"items\": [ { \"productId\": \"<PRODUCT_UUID>\", \"qty\": 1 } ],\n  \"couponCode\": null,\n  \"recipient\": { \"name\": \"測試\", \"email\": \"it@test.local\", \"tel\": \"0912345678\", \"address\": \"親送／到店自取\" },\n  \"creditUsed\": 0\n}" }
+      }
+    },
+    {
+      "name": "Edge / tappay-pay(付款,信用卡 3DS)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "apikey", "value": "{{anonKey}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/functions/v1/tappay-pay", "host": ["{{baseUrl}}"], "path": ["functions","v1","tappay-pay"] },
+        "body": { "mode": "raw", "raw": "{\n  \"orderId\": \"<ORDER_UUID>\",\n  \"prime\": \"<TAPPAY_PRIME>\",\n  \"method\": \"card\"\n}" }
+      }
+    },
+    {
+      "name": "Edge / admin-order-action(後台動作)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "apikey", "value": "{{anonKey}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/functions/v1/admin-order-action", "host": ["{{baseUrl}}"], "path": ["functions","v1","admin-order-action"] },
+        "body": { "mode": "raw", "raw": "{\n  \"orderId\": \"<ORDER_UUID>\",\n  \"action\": \"complete\"\n}" }
+      }
+    },
+    {
+      "name": "REST / products(商品列表)",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "apikey", "value": "{{anonKey}}" } ],
+        "url": { "raw": "{{baseUrl}}/rest/v1/products?select=id,title,price,inventory,is_enabled", "host": ["{{baseUrl}}"], "path": ["rest","v1","products"], "query": [ { "key": "select", "value": "id,title,price,inventory,is_enabled" } ] }
+      }
+    },
+    {
+      "name": "REST / orders(我的訂單)",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "apikey", "value": "{{anonKey}}" } ],
+        "url": { "raw": "{{baseUrl}}/rest/v1/orders?select=id,order_no,status,total&order=created_at.desc", "host": ["{{baseUrl}}"], "path": ["rest","v1","orders"], "query": [ { "key": "select", "value": "id,order_no,status,total" }, { "key": "order", "value": "created_at.desc" } ] }
+      }
+    }
+  ]
+}
