@@ -63,7 +63,10 @@ export default function AdminPromotions(): JSX.Element {
   const handleSave = async (e: FormEvent) => {
     e.preventDefault(); setSaving(true); setSaveError(null);
     const patch = { name: formName, code: formCode.trim().toUpperCase() || null, promo_group: formGroup,
-      is_active: formActive, starts_at: formStartsAt || null, ends_at: formEndsAt || null, priority: formPriority };
+      is_active: formActive,
+      starts_at: formStartsAt ? `${formStartsAt}T00:00:00+08:00` : null,
+      ends_at: formEndsAt ? `${formEndsAt}T23:59:59+08:00` : null,
+      priority: formPriority };
     try {
       if (editing) {
         const { error: err } = await supabase.from("promotions").update(patch).eq("id", editing.id);
