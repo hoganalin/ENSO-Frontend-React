@@ -148,6 +148,7 @@ export default function AdminShell({ title, children }: Props): JSX.Element {
             <h1 className={styles.topbarTitle}>{title}</h1>
             <div className={styles.topbarMeta}>
               <div className={styles.topbarDate}>{dateStr}</div>
+              <Link to="/" className={styles.backBtn} title="返回前台商店">↩ 返回前台</Link>
               <button type="button" className={styles.logoutBtn} onClick={handleLogout} title="登出後台">⎋ 登出</button>
             </div>
           </div>

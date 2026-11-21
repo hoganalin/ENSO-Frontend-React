@@ -720,3 +720,24 @@
   background: rgba(214, 190, 138, 0.15);
   color: #f0e4c4;
 }
+
+/* 後台→返回前台按鈕 */
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  background: rgba(214, 190, 138, 0.15);
+  border: 1px solid rgba(214, 190, 138, 0.45);
+  color: #d6be8a;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.backBtn:hover {
+  background: rgba(214, 190, 138, 0.28);
+  color: #f0e4c4;
+}
