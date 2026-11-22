@@ -1,0 +1,30 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { loadEnv } from "vite";
+import SwaggerParser from "swagger-parser";
+
+import { createOpenApiDocument } from "./spec";
+
+const outputPath = path.resolve("docs/openapi.json");
+const env = loadEnv("development", process.cwd(), "");
+const configuredServer = process.env.OPENAPI_SERVER_URL
+  ?? env.OPENAPI_SERVER_URL
+  ?? env.VITE_SUPABASE_URL
+  ?? "http://127.0.0.1:54321";
+const normalizedServer = configuredServer.replace(/\/+$/, "");
+const serverUrl = normalizedServer.endsWith("/functions/v1")
+  ? normalizedServer
+  : `${normalizedServer}/functions/v1`;
+
+async function main(): Promise<void> {
+  const document = createOpenApiDocument(serverUrl);
+  await SwaggerParser.validate(document);
+  await mkdir(path.dirname(outputPath), { recursive: true });
+  await writeFile(outputPath, `${JSON.stringify(document, null, 2)}\n`, "utf8");
+  console.log(`Generated and validated ${path.relative(process.cwd(), outputPath)}`);
+}
+
+main().catch((error: unknown) => {
+  console.error("OpenAPI generation failed:", error);
+  process.exitCode = 1;
+});
