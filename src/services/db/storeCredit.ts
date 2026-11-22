@@ -2,8 +2,6 @@
 import {
   balanceOf,
   earnTxForOrder,
-  reverseTxForOrder,
-  spendTx,
   type CompletedOrder,
   type CreditTx,
   type Referrer,
@@ -22,10 +20,6 @@ function getUTCTimestamp(date: Date = new Date()): string {
   return date.toISOString(); // Returns UTC in ISO 8601 format
 }
 
-function getUTCDateString(date: Date = new Date()): string {
-  // 返回 YYYY-MM-DD 格式，基於 UTC 時間
-  return date.toISOString().split('T')[0];
-}
 
 function rowToTx(r: CreditRow): CreditTx {
   return {
@@ -79,57 +73,6 @@ export async function issueCreditForCompletedOrder(
       order_id: tx.orderId ?? null,
       created_at: getUTCTimestamp(new Date(tx.createdAt)),
       expires_at: tx.expiresAt ? new Date(tx.expiresAt).toISOString() : null,
-    })
-    .select()
-    .single();
-  if (error) throw new Error(error.message);
-  return data as CreditRow;
-}
-
-/** 退款 → 回沖該訂單發出的購物金（可造成負餘額）。 */
-export async function reverseCreditForOrder(
-  orderId: string,
-  reversedAtMs: number,
-): Promise<CreditRow | null> {
-  const { data, error } = await supabase
-    .from("store_credit_ledger")
-    .select("*")
-    .eq("order_id", orderId);
-  if (error) throw new Error(error.message);
-
-  const ledger = ((data ?? []) as CreditRow[]).map(rowToTx);
-  const tx = reverseTxForOrder(orderId, ledger, reversedAtMs);
-  if (!tx) return null;
-
-  const { data: inserted, error: insertError } = await supabase
-    .from("store_credit_ledger")
-    .insert({
-      member_id: tx.memberId,
-      type: tx.type,
-      amount: tx.amount,
-      order_id: tx.orderId ?? null,
-      created_at: getUTCTimestamp(new Date(tx.createdAt)),
-    })
-    .select()
-    .single();
-  if (insertError) throw new Error(insertError.message);
-  return inserted as CreditRow;
-}
-
-/** 結帳折抵購物金。 */
-export async function spendCredit(
-  memberId: string,
-  amount: number,
-  spentAtMs: number,
-): Promise<CreditRow> {
-  const tx = spendTx(memberId, amount, spentAtMs);
-  const { data, error } = await supabase
-    .from("store_credit_ledger")
-    .insert({
-      member_id: tx.memberId,
-      type: tx.type,
-      amount: tx.amount,
-      created_at: getUTCTimestamp(new Date(tx.createdAt)),
     })
     .select()
     .single();
