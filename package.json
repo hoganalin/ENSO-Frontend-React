@@ -14,7 +14,8 @@
     "test:e2e": "node scripts/gen-e2e-env.mjs && playwright test",
     "postman": "node scripts/gen-postman-env.mjs && newman run postman/queenmaeve.postman_collection.json -e postman/local.postman_environment.json",
     "postman:gen": "node scripts/gen-openapi.mjs && node scripts/gen-postman-env.mjs",
-    "dev:e2e": "vite --mode e2e --port 5199 --strictPort"
+    "dev:e2e": "vite --mode e2e --port 5199 --strictPort",
+    "check:bundle": "node scripts/check-bundle-secrets.mjs"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
