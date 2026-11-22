@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode, type JSX } from "react";
-import { NavLink, ScrollRestoration } from "react-router";
+import { NavLink, ScrollRestoration, Link } from "react-router";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { getCurrentProfile, signOut } from "@/services/db/auth";
 import type { ProfileRow } from "@/services/db/types";
