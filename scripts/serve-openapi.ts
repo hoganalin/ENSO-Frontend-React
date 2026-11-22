@@ -1,17 +1,15 @@
-import { readFile } from "node:fs/promises";
 import path from "node:path";
+import SwaggerParser from "@apidevtools/swagger-parser";
 import express from "express";
-import SwaggerParser from "swagger-parser";
-import swaggerUi from "swagger-ui-express";
+import swaggerUi, { type JsonObject } from "swagger-ui-express";
 
 async function main(): Promise<void> {
   const documentPath = path.resolve("docs/openapi.json");
-  const document: unknown = JSON.parse(await readFile(documentPath, "utf8"));
-  await SwaggerParser.validate(document);
+  const document = await SwaggerParser.validate(documentPath);
 
   const app = express();
   app.get("/openapi.json", (_request, response) => response.json(document));
-  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(document));
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(document as JsonObject));
   app.get("/", (_request, response) => response.redirect("/api-docs"));
 
   const rawPort = process.env.OPENAPI_PORT ?? "4174";

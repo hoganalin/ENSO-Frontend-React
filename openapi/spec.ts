@@ -1,7 +1,6 @@
 import {
   OpenAPIRegistry,
   OpenApiGeneratorV3,
-  extendZodWithOpenApi,
 } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
 
@@ -20,9 +19,17 @@ import {
   TappayResponseSchema,
 } from "./schemas";
 
-extendZodWithOpenApi(z);
-
 const registry = new OpenAPIRegistry();
+registry.registerComponent("securitySchemes", "BearerAuth", {
+  type: "http",
+  scheme: "bearer",
+  bearerFormat: "JWT",
+});
+registry.registerComponent("securitySchemes", "DeliveryCronToken", {
+  type: "apiKey",
+  in: "header",
+  name: "x-delivery-cron-token",
+});
 registry.register("ApiErrorResponse", ApiErrorResponseSchema);
 registry.register("CheckoutRequest", CheckoutRequestSchema);
 registry.register("CheckoutResponse", CheckoutResponseSchema);
@@ -166,10 +173,10 @@ registry.registerPath({
   },
   responses: {
     200: jsonResponse("Scheduled delivery results.", ScheduledDeliveryResponseSchema),
-    401: { description: "Cron token is missing or invalid.", content: { "application/json": { schema: z.object({ error: z.string() }) } },
-    405: { description: "Only POST is supported.", content: { "application/json": { schema: z.object({ error: z.string() }) } },
-    409: { description: "The environment is not configured for simulation.", content: { "application/json": { schema: z.object({ error: z.string() }) } },
-    503: { description: "Delivery worker is unavailable.", content: { "application/json": { schema: z.object({ error: z.string() }) } },
+    401: { description: "Cron token is missing or invalid.", content: { "application/json": { schema: z.object({ error: z.string() }) } } },
+    405: { description: "Only POST is supported.", content: { "application/json": { schema: z.object({ error: z.string() }) } } },
+    409: { description: "The environment is not configured for simulation.", content: { "application/json": { schema: z.object({ error: z.string() }) } } },
+    503: { description: "Delivery worker is unavailable.", content: { "application/json": { schema: z.object({ error: z.string() }) } } },
   },
 });
 
@@ -203,11 +210,5 @@ export function createOpenApiDocument(serverUrl = "http://127.0.0.1:54321/functi
       { name: "Admin" },
       { name: "Delivery" },
     ],
-    components: {
-      securitySchemes: {
-        BearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" },
-        DeliveryCronToken: { type: "apiKey", in: "header", name: "x-delivery-cron-token" },
-      },
-    },
   });
 }

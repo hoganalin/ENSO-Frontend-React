@@ -14,6 +14,11 @@
     "test:e2e": "node scripts/gen-e2e-env.mjs && playwright test",
     "postman": "node scripts/gen-postman-env.mjs && newman run postman/queenmaeve.postman_collection.json -e postman/local.postman_environment.json",
     "postman:gen": "node scripts/gen-openapi.mjs && node scripts/gen-postman-env.mjs",
+    "openapi:typecheck": "tsc --noEmit -p tsconfig.openapi.json",
+    "openapi:generate": "npm run openapi:typecheck && tsx openapi/generate.ts",
+    "openapi:validate": "tsx openapi/validate.ts",
+    "docs:serve": "tsx scripts/serve-openapi.ts",
+    "docs:api": "npm run openapi:generate && npm run docs:serve",
     "dev:e2e": "vite --mode e2e --port 5199 --strictPort",
     "check:bundle": "node scripts/check-bundle-secrets.mjs"
   },
@@ -37,27 +42,35 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@apidevtools/swagger-parser": "^13.1.0",
+    "@asteasolutions/zod-to-openapi": "^9.1.0",
     "@eslint/js": "^9.39.1",
     "@tailwindcss/vite": "^4.2.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/aos": "^3.0.7",
+    "@types/express": "^5.0.6",
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@types/swagger-ui-express": "^4.1.8",
     "@vitejs/plugin-react": "^5.1.1",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "eslint-plugin-simple-import-sort": "^12.1.1",
+    "express": "^5.3.0",
     "globals": "^16.5.0",
     "jsdom": "^29.0.1",
     "sass-embedded": "^1.97.3",
+    "swagger-ui-express": "^5.0.1",
     "typescript": "^5.9.3",
+    "tsx": "^4.23.15",
     "vite": "^7.3.1",
     "vitest": "^4.1.2",
     "@playwright/test": "^1.49.1",
-    "newman": "^6.2.1"
+    "newman": "^6.2.1",
+    "zod": "^4.6.7"
   }
 }

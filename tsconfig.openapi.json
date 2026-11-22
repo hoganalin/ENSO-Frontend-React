@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "incremental": false
+  },
+  "include": ["openapi/**/*.ts", "scripts/serve-openapi.ts"],
+  "exclude": ["node_modules", "dist"]
+}

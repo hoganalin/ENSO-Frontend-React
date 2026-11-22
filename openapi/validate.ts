@@ -1,11 +1,9 @@
-import { readFile } from "node:fs/promises";
 import path from "node:path";
-import SwaggerParser from "swagger-parser";
+import SwaggerParser from "@apidevtools/swagger-parser";
 
 async function main(): Promise<void> {
   const inputPath = path.resolve("docs/openapi.json");
-  const document: unknown = JSON.parse(await readFile(inputPath, "utf8"));
-  await SwaggerParser.validate(document);
+  await SwaggerParser.validate(inputPath);
   console.log(`Validated ${path.relative(process.cwd(), inputPath)}`);
 }
 

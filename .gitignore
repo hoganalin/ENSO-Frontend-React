@@ -64,4 +64,5 @@ playwright-report/
 test-results/
 supabase/.branches/
 openapi.json
+!docs/openapi.json
 .env.e2e

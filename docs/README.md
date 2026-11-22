@@ -47,6 +47,10 @@ npm run dev
 | `npm run lint` | ESLint 檢查 |
 | `npm test` | 執行 Vitest（一次性） |
 | `npx vitest` | Vitest watch 模式 |
+| `npm run openapi:typecheck` | 嚴格型別檢查 OpenAPI 與文件伺服器程式 |
+| `npm run openapi:generate` | 以 Zod 契約產生並驗證 `docs/openapi.json` |
+| `npm run openapi:validate` | 驗證既有 OpenAPI 文件 |
+| `npm run docs:api` | 產生文件並啟動 Swagger UI（`http://127.0.0.1:4174/api-docs`）|
 
 ## 文件索引
 
@@ -59,3 +63,4 @@ npm run dev
 | [TESTING.md](./TESTING.md) | 測試規範與指南 |
 | [CHANGELOG.md](./CHANGELOG.md) | 更新日誌 |
 | [plans/](./plans/) | 開發計畫目錄 |
+| [OpenAPI 文件](./API.md) | Supabase Edge Functions API 合約、生成與 Swagger UI 使用方式 |
