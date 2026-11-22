@@ -42,6 +42,13 @@ function fmtNTD(n: number): string {
   return `${sign}NT$ ${n.toLocaleString("zh-TW")}`;
 }
 
+// 帳本 amount 為正數幅度,方向由 type 決定:spend/expire/reverse=扣(負)、earn/refund=加(正)
+const DEDUCT_TYPES = new Set(["spend", "expire", "reverse"]);
+function signedAmount(r: { type: string; amount: number }): number {
+  const mag = Math.abs(r.amount);
+  return DEDUCT_TYPES.has(r.type) ? -mag : mag;
+}
+
 function downloadCsv(rows: LedgerRow[]): void {
   const header = "日期,會員姓名,電話,類型,金額,訂單ID,到期日\n";
   const body = rows.map(r =>
@@ -50,7 +57,7 @@ function downloadCsv(rows: LedgerRow[]): void {
       r.member_name,
       r.member_phone,
       TYPE_LABEL[r.type] ?? r.type,
-      r.amount,
+      signedAmount(r),
       r.order_id ?? "",
       r.expires_at?.slice(0, 10) ?? "",
     ].join(",")
@@ -147,7 +154,7 @@ export default function AdminCreditLog(): JSX.Element {
 
   const totalPages  = Math.ceil(filtered.length / PAGE_SIZE);
   const paged       = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const totalAmount = filtered.reduce((s, r) => s + r.amount, 0);
+  const totalAmount = filtered.reduce((s, r) => s + signedAmount(r), 0);
 
   // 月份選單（從資料推導）
   const monthOptions = Array.from(new Set(rows.map(r => r.created_at.slice(0, 7)))).sort().reverse();
@@ -288,8 +295,8 @@ export default function AdminCreditLog(): JSX.Element {
                           {r.note ? "人工調整" : (TYPE_LABEL[r.type] ?? r.type)}
                         </span>
                       </td>
-                      <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", color: r.amount >= 0 ? "var(--enso-gold,#c9a063)" : "#e07070" }}>
-                        {fmtNTD(r.amount)}
+                      <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", color: signedAmount(r) >= 0 ? "var(--enso-gold,#c9a063)" : "#e07070" }}>
+                        {fmtNTD(signedAmount(r))}
                       </td>
                       <td style={{ fontSize: ".8rem", opacity: .7 }}>
                         {r.order_id ? r.order_id.slice(0, 8) + "…" : (r.note ? r.note : "—")}
