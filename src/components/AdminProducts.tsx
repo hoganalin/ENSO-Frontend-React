@@ -30,6 +30,7 @@ interface InvLog {
 export default function AdminProducts(): JSX.Element {
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [profile, setProfile]   = useState<ProfileRow | null>(null);
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -70,11 +71,19 @@ export default function AdminProducts(): JSX.Element {
   const handleCancel = () => { setEditingId(null); setShowAddForm(false); setForm(emptyForm()); setFormError(null); };
   const handleDelete = async (id: string, title: string) => {
     if (!window.confirm(`確定要刪除商品「${title}」嗎？`)) return;
+    setDeleteError(null);
     try {
       const { error: dbErr } = await supabase.from("products").delete().eq("id", id);
       if (dbErr) throw dbErr;
       setProducts(prev => prev.filter(p => p.id !== id));
-    } catch (e) { setError(e instanceof Error ? e.message : "刪除失敗"); }
+    } catch (e) {
+      const code = e && typeof e === "object" && "code" in e ? e.code : null;
+      setDeleteError(
+        code === "23503"
+          ? "此商品已有關聯資料，為保留歷史紀錄無法直接刪除。請使用「編輯」將商品下架。"
+          : e instanceof Error ? e.message : "刪除商品失敗，請稍後再試。",
+      );
+    }
   };
 
   const loadStockLogs = async (productId: string) => {
@@ -209,6 +218,8 @@ export default function AdminProducts(): JSX.Element {
           )}
         </div>
       </div>
+
+      {deleteError && <div className={styles.alert} role="alert">{deleteError}</div>}
 
       {showAddForm && renderForm()}
 
